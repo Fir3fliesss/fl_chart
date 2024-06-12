@@ -1,6 +1,4 @@
 import 'dart:math';
-
-import 'package:fl_chart_app/presentation/resources/app_resources.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -11,22 +9,22 @@ class ScatterChartSample2 extends StatefulWidget {
   State<StatefulWidget> createState() => _ScatterChartSample2State();
 }
 
-class _ScatterChartSample2State extends State {
+class _ScatterChartSample2State extends State<ScatterChartSample2> {
   int touchedIndex = -1;
 
   Color greyColor = Colors.grey;
   final _availableColors = [
-    AppColors.contentColorGreen,
-    AppColors.contentColorYellow,
-    AppColors.contentColorPink,
-    AppColors.contentColorOrange,
-    AppColors.contentColorPurple,
-    AppColors.contentColorBlue,
-    AppColors.contentColorRed,
-    AppColors.contentColorCyan,
-    AppColors.contentColorBlue,
-    AppColors.contentColorGreen,
-    AppColors.contentColorPink,
+    Colors.green,
+    Colors.yellow,
+    Colors.pink,
+    Colors.orange,
+    Colors.purple,
+    Colors.blue,
+    Colors.red,
+    Colors.cyan,
+    Colors.blue,
+    Colors.green,
+    Colors.pink,
   ];
 
   List<int> selectedSpots = [];
@@ -57,7 +55,6 @@ class _ScatterChartSample2State extends State {
 
   @override
   Widget build(BuildContext context) {
-    // (x, y, size)
     final data = [
       (4.0, 4.0, 4.0),
       (2.0, 5.0, 12.0),
@@ -71,27 +68,35 @@ class _ScatterChartSample2State extends State {
       (5.0, 2.5, 24.0),
       (3.0, 7.0, 18.0),
     ];
+
+    // Store the color used for each spot
+    final spotsWithColors = data.asMap().entries.map((e) {
+      final index = e.key;
+      final (double x, double y, double size) = e.value;
+      final color = selectedSpots.contains(index)
+          ? _availableColors[index % _availableColors.length]
+          : Colors.white.withOpacity(0.5);
+      return ScatterSpotWithColor(
+        spot: ScatterSpot(
+          x,
+          y,
+          dotPainter: _getPaint(
+            _currentPaintType,
+            size,
+            color,
+          ),
+        ),
+        color: color,
+      );
+    }).toList();
+
     return AspectRatio(
       aspectRatio: 1,
       child: Stack(
         children: [
           ScatterChart(
             ScatterChartData(
-              scatterSpots: data.asMap().entries.map((e) {
-                final index = e.key;
-                final (double x, double y, double size) = e.value;
-                return ScatterSpot(
-                  x,
-                  y,
-                  dotPainter: _getPaint(
-                    _currentPaintType,
-                    size,
-                    selectedSpots.contains(index)
-                        ? _availableColors[index % _availableColors.length]
-                        : AppColors.contentColorWhite.withOpacity(0.5),
-                  ),
-                );
-              }).toList(),
+              scatterSpots: spotsWithColors.map((e) => e.spot).toList(),
               minX: 0,
               maxX: 10,
               minY: 0,
@@ -103,13 +108,13 @@ class _ScatterChartSample2State extends State {
                 show: true,
                 drawHorizontalLine: true,
                 checkToShowHorizontalLine: (value) => true,
-                getDrawingHorizontalLine: (value) => const FlLine(
-                  color: AppColors.gridLinesColor,
+                getDrawingHorizontalLine: (value) => FlLine(
+                  color: Colors.grey[300]!,
                 ),
                 drawVerticalLine: true,
                 checkToShowVerticalLine: (value) => true,
-                getDrawingVerticalLine: (value) => const FlLine(
-                  color: AppColors.gridLinesColor,
+                getDrawingVerticalLine: (value) => FlLine(
+                  color: Colors.grey[300]!,
                 ),
               ),
               titlesData: const FlTitlesData(
@@ -126,26 +131,14 @@ class _ScatterChartSample2State extends State {
                       : SystemMouseCursors.click;
                 },
                 touchTooltipData: ScatterTouchTooltipData(
-                  getTooltipColor: (ScatterSpot touchedBarSpot) {
-                    return touchedBarSpot.dotPainter.mainColor;
+                  getTooltipColor: (ScatterSpot touchedSpot) {
+                    // Find the color from the spotsWithColors list
+                    return spotsWithColors.firstWhere(
+                      (element) => element.spot == touchedSpot,
+                    ).color;
                   },
-                  getTooltipItems: (ScatterSpot touchedBarSpot) {
-                    final bool isBgDark =
-                        switch ((touchedBarSpot.x, touchedBarSpot.y)) {
-                      (4.0, 4.0) => false,
-                      (2.0, 5.0) => false,
-                      (4.0, 5.0) => true,
-                      (8.0, 6.0) => true,
-                      (5.0, 7.0) => true,
-                      (7.0, 2.0) => true,
-                      (3.0, 2.0) => true,
-                      (2.0, 8.0) => false,
-                      (8.0, 8.0) => true,
-                      (5.0, 2.5) => false,
-                      (3.0, 7.0) => true,
-                      _ => false,
-                    };
-
+                  getTooltipItems: (ScatterSpot touchedSpot) {
+                    final bool isBgDark = touchedSpot.x.toInt().isEven;
                     final color1 = isBgDark ? Colors.grey[100] : Colors.black87;
                     final color2 = isBgDark ? Colors.white : Colors.black;
                     return ScatterTooltipItem(
@@ -158,7 +151,7 @@ class _ScatterChartSample2State extends State {
                       bottomMargin: 10,
                       children: [
                         TextSpan(
-                          text: '${touchedBarSpot.x.toInt()} \n',
+                          text: '${touchedSpot.x.toInt()} \n',
                           style: TextStyle(
                             color: color2,
                             fontStyle: FontStyle.normal,
@@ -174,7 +167,7 @@ class _ScatterChartSample2State extends State {
                           ),
                         ),
                         TextSpan(
-                          text: touchedBarSpot.y.toInt().toString(),
+                          text: touchedSpot.y.toInt().toString(),
                           style: TextStyle(
                             color: color2,
                             fontStyle: FontStyle.normal,
@@ -187,8 +180,7 @@ class _ScatterChartSample2State extends State {
                 ),
                 touchCallback:
                     (FlTouchEvent event, ScatterTouchResponse? touchResponse) {
-                  if (touchResponse == null ||
-                      touchResponse.touchedSpot == null) {
+                  if (touchResponse == null || touchResponse.touchedSpot == null) {
                     return;
                   }
                   if (event is FlTapUpEvent) {
@@ -236,3 +228,20 @@ enum PainterType {
   square,
   cross,
 }
+
+class ScatterSpotWithColor {
+  final ScatterSpot spot;
+  final Color color;
+
+  ScatterSpotWithColor({
+    required this.spot,
+    required this.color,
+  });
+}
+
+void main() => runApp(MaterialApp(
+  home: Scaffold(
+    appBar: AppBar(title: const Text('Scatter Chart Sample')),
+    body: const ScatterChartSample2(),
+  ),
+));
