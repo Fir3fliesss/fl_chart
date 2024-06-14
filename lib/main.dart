@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+// Mendefinisikan widget ScatterChartSample2 yang akan digunakan sebagai tampilan utama scatter chart
 class ScatterChartSample2 extends StatefulWidget {
   const ScatterChartSample2({super.key});
 
@@ -9,10 +10,14 @@ class ScatterChartSample2 extends StatefulWidget {
   State<StatefulWidget> createState() => _ScatterChartSample2State();
 }
 
+// State class yang digunakan untuk menyimpan dan mengelola state dari ScatterChartSample2
 class _ScatterChartSample2State extends State<ScatterChartSample2> {
-  int touchedIndex = -1;
+  int touchedIndex = -1; // Indeks dari spot yang disentuh
 
+  // Warna abu-abu
   Color greyColor = Colors.grey;
+
+  // Daftar warna yang tersedia untuk digunakan pada scatter spots
   final _availableColors = [
     Colors.green,
     Colors.yellow,
@@ -27,10 +32,11 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
     Colors.pink,
   ];
 
-  List<int> selectedSpots = [];
+  List<int> selectedSpots = []; // Daftar indeks spots yang dipilih
 
-  PainterType _currentPaintType = PainterType.circle;
+  PainterType _currentPaintType = PainterType.circle; // Tipe painter yang digunakan
 
+  // Metode statis untuk mendapatkan painter berdasarkan tipe dan ukuran
   static FlDotPainter _getPaint(PainterType type, double size, Color color) {
     switch (type) {
       case PainterType.circle:
@@ -55,6 +61,7 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
 
   @override
   Widget build(BuildContext context) {
+    // Data untuk scatter spots
     final data = [
       (4.0, 4.0, 4.0),
       (2.0, 5.0, 12.0),
@@ -69,7 +76,7 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
       (3.0, 7.0, 18.0),
     ];
 
-    // Store the color used for each spot
+    // Menyimpan warna yang digunakan untuk setiap spot
     final spotsWithColors = data.asMap().entries.map((e) {
       final index = e.key;
       final (double x, double y, double size) = e.value;
@@ -90,6 +97,7 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
       );
     }).toList();
 
+    // Mengatur tampilan utama scatter chart
     return AspectRatio(
       aspectRatio: 1,
       child: Stack(
@@ -132,7 +140,6 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                 },
                 touchTooltipData: ScatterTouchTooltipData(
                   getTooltipColor: (ScatterSpot touchedSpot) {
-                    // Find the color from the spotsWithColors list
                     return spotsWithColors.firstWhere(
                       (element) => element.spot == touchedSpot,
                     ).color;
@@ -223,12 +230,14 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
   }
 }
 
+// Enum untuk menentukan tipe painter
 enum PainterType {
   circle,
   square,
   cross,
 }
 
+// Kelas untuk menyimpan ScatterSpot bersama dengan warnanya
 class ScatterSpotWithColor {
   final ScatterSpot spot;
   final Color color;
@@ -239,6 +248,7 @@ class ScatterSpotWithColor {
   });
 }
 
+// Fungsi utama untuk menjalankan aplikasi Flutter
 void main() => runApp(MaterialApp(
   home: Scaffold(
     appBar: AppBar(title: const Text('Scatter Chart Sample')),
