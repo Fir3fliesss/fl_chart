@@ -47,9 +47,9 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
         spot: ScatterSpot(
           x,
           y,
-          dotPainter: FlImagePainter(
-            image: const AssetImage('assets/fish.png'),
-            size: Size(size, size),
+          dotPainter: FlDotCirclePainter(
+            color: color,
+            radius: size,
           ),
         ),
         color: color,
@@ -99,10 +99,6 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
       ],
     );
   }
-}
-
-// ignore: non_constant_identifier_names
-FlImagePainter({required AssetImage image, required Size size}) {
 }
 
 class ScatterSpotWithColor {
