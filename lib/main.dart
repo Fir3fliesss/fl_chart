@@ -9,50 +9,36 @@ class ScatterChartSample2 extends StatefulWidget {
 }
 
 class _ScatterChartSample2State extends State<ScatterChartSample2> {
-  final _availableColors = [
-    Colors.green,
-    Colors.yellow,
-    Colors.pink,
-    Colors.orange,
-    Colors.purple,
-    Colors.blue,
-    Colors.red,
-    Colors.cyan,
-    Colors.blue,
-    Colors.green,
-    Colors.pink,
-  ];
+  final Color circleColor = const Color(0xFF123456); // Ganti dengan warna kustom yang Anda inginkan
 
   @override
   Widget build(BuildContext context) {
     final data = [
-      (4.0, 4.0, 4.0),
-      (2.0, 5.0, 12.0),
-      (4.0, 5.0, 8.0),
-      (8.0, 6.0, 20.0),
-      (5.0, 7.0, 14.0),
-      (7.0, 2.0, 18.0),
-      (3.0, 2.0, 36.0),
-      (2.0, 8.0, 22.0),
-      (8.0, 8.0, 32.0),
-      (5.0, 2.5, 24.0),
-      (3.0, 7.0, 18.0),
+      (4.0, 4.0, 10.0),
+      (2.0, 5.0, 10.0),
+      (4.0, 5.0, 10.0),
+      (8.0, 6.0, 10.0),
+      (5.0, 7.0, 10.0),
+      (7.0, 2.0, 10.0),
+      (3.0, 2.0, 10.0),
+      (2.0, 8.0, 10.0),
+      (8.0, 8.0, 10.0),
+      (5.0, 2.5, 10.0),
+      (3.0, 7.0, 10.0),
     ];
 
-    final spotsWithColors = data.asMap().entries.map((e) {
-      final index = e.key;
-      final (double x, double y, double size) = e.value;
-      final color = _availableColors[index % _availableColors.length];
+    final spotsWithColors = data.map((e) {
+      final (double x, double y, double size) = e;
       return ScatterSpotWithColor(
         spot: ScatterSpot(
           x,
           y,
           dotPainter: FlDotCirclePainter(
-            color: color,
+            color: circleColor,
             radius: size,
           ),
         ),
-        color: color,
+        color: circleColor,
         xLabel: '${x}m',
       );
     }).toList();
@@ -69,6 +55,7 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                   maxX: 10,
                   minY: 0,
                   maxY: 10,
+                  backgroundColor: Colors.lightBlue,
                   borderData: FlBorderData(
                     show: false,
                   ),
@@ -77,16 +64,27 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                     drawHorizontalLine: true,
                     checkToShowHorizontalLine: (value) => true,
                     getDrawingHorizontalLine: (value) => FlLine(
-                      color: Colors.grey[300]!,
+                      color: Colors.green[900]!,
                     ),
                     drawVerticalLine: true,
                     checkToShowVerticalLine: (value) => true,
                     getDrawingVerticalLine: (value) => FlLine(
-                      color: Colors.grey[300]!,
+                      color: Colors.green[900]!,
                     ),
                   ),
                   titlesData: const FlTitlesData(
-                    show: false,
+                    show: true,
+                  ),
+                  scatterTouchData: ScatterTouchData(
+                    enabled: false,
+                    handleBuiltInTouches: false,
+                    // touchCallback: (FlTouchEvent event, ScatterTouchResponse? response) {
+                    //   if (event.isInterestedForInteractions && response != null) {
+                    //     // Handle the touch event. For now, do nothing
+                    //     // But you can show a custom message or perform any action here
+                    //     ('ScatterSpot touched: ${response.touchedSpot}');
+                    //   }
+                    // },
                   ),
                 ),
               ),

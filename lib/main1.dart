@@ -1,8 +1,3 @@
-# chart_flutter
-
-A new Flutter project with fl_chart lib
-
-`
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -14,36 +9,50 @@ class ScatterChartSample2 extends StatefulWidget {
 }
 
 class _ScatterChartSample2State extends State<ScatterChartSample2> {
-  final Color circleColor = const Color(0xFF123456); // Ganti dengan warna kustom yang Anda inginkan
+  final _availableColors = [
+    Colors.green,
+    Colors.yellow,
+    Colors.pink,
+    Colors.orange,
+    Colors.purple,
+    Colors.blue,
+    Colors.red,
+    Colors.cyan,
+    Colors.blue,
+    Colors.green,
+    Colors.pink,
+  ];
 
   @override
   Widget build(BuildContext context) {
     final data = [
-      (4.0, 4.0, 10.0),
-      (2.0, 5.0, 10.0),
-      (4.0, 5.0, 10.0),
-      (8.0, 6.0, 10.0),
-      (5.0, 7.0, 10.0),
-      (7.0, 2.0, 10.0),
-      (3.0, 2.0, 10.0),
-      (2.0, 8.0, 10.0),
-      (8.0, 8.0, 10.0),
-      (5.0, 2.5, 10.0),
-      (3.0, 7.0, 10.0),
+      (4.0, 4.0, 4.0),
+      (2.0, 5.0, 12.0),
+      (4.0, 5.0, 8.0),
+      (8.0, 6.0, 20.0),
+      (5.0, 7.0, 14.0),
+      (7.0, 2.0, 18.0),
+      (3.0, 2.0, 36.0),
+      (2.0, 8.0, 22.0),
+      (8.0, 8.0, 32.0),
+      (5.0, 2.5, 24.0),
+      (3.0, 7.0, 18.0),
     ];
 
-    final spotsWithColors = data.map((e) {
-      final (double x, double y, double size) = e;
+    final spotsWithColors = data.asMap().entries.map((e) {
+      final index = e.key;
+      final (double x, double y, double size) = e.value;
+      final color = _availableColors[index % _availableColors.length];
       return ScatterSpotWithColor(
         spot: ScatterSpot(
           x,
           y,
           dotPainter: FlDotCirclePainter(
-            color: circleColor,
+            color: color,
             radius: size,
           ),
         ),
-        color: circleColor,
+        color: color,
         xLabel: '${x}m',
       );
     }).toList();
@@ -76,19 +85,32 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                       color: Colors.grey[300]!,
                     ),
                   ),
-                  titlesData: const FlTitlesData(
+                   titlesData: const FlTitlesData(
                     show: false,
-                  ),
-                  scatterTouchData: ScatterTouchData(
-                    enabled: true,
-                    handleBuiltInTouches: false,
-                    // touchCallback: (FlTouchEvent event, ScatterTouchResponse? response) {
-                    //   if (event.isInterestedForInteractions && response != null) {
-                    //     // Handle the touch event. For now, do nothing
-                    //     // But you can show a custom message or perform any action here
-                    //     ('ScatterSpot touched: ${response.touchedSpot}');
-                    //   }
-                    // },
+                    // leftTitles: AxisTitles(
+                    //   sideTitles: SideTitles(
+                    //     showTitles: true,
+                    //     reservedSize: 22,
+                    //   ),
+                    // ),
+                    // bottomTitles: AxisTitles(
+                    //   sideTitles: SideTitles(
+                    //     showTitles: true,
+                    //     reservedSize: 22,
+                    //   ),
+                    // ),
+                    // topTitles: AxisTitles(
+                    //   sideTitles: SideTitles(
+                    //     showTitles: false,
+                    //     reservedSize: 22,
+                    //   ),
+                    // ),
+                    // rightTitles: AxisTitles(
+                    //   sideTitles: SideTitles(
+                    //     showTitles: false,
+                    //     reservedSize: 22,
+                    //   )
+                    // )
                   ),
                 ),
               ),
@@ -149,11 +171,8 @@ class XLabelPainter extends CustomPainter {
 }
 
 void main() => runApp(MaterialApp(
-  debugShowCheckedModeBanner: false,
   home: Scaffold(
-    appBar: AppBar(title: const Text('Fish Finder')),
+    appBar: AppBar(title: const Text('Scatter Chart Sample')),
     body: const ScatterChartSample2(),
   ),
 ));
-
-`
