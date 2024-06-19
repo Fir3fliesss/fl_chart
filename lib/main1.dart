@@ -9,50 +9,36 @@ class ScatterChartSample2 extends StatefulWidget {
 }
 
 class _ScatterChartSample2State extends State<ScatterChartSample2> {
-  final _availableColors = [
-    Colors.green,
-    Colors.yellow,
-    Colors.pink,
-    Colors.orange,
-    Colors.purple,
-    Colors.blue,
-    Colors.red,
-    Colors.cyan,
-    Colors.blue,
-    Colors.green,
-    Colors.pink,
-  ];
+  final Color circleColor = const Color(0xFF123456); // Ganti dengan warna kustom yang Anda inginkan
 
   @override
   Widget build(BuildContext context) {
     final data = [
-      (4.0, 4.0, 4.0),
-      (2.0, 5.0, 12.0),
-      (4.0, 5.0, 8.0),
-      (8.0, 6.0, 20.0),
-      (5.0, 7.0, 14.0),
-      (7.0, 2.0, 18.0),
-      (3.0, 2.0, 36.0),
-      (2.0, 8.0, 22.0),
-      (8.0, 8.0, 32.0),
-      (5.0, 2.5, 24.0),
-      (3.0, 7.0, 18.0),
+      (4.0, 4.0, 10.0),
+      (2.0, 5.0, 10.0),
+      (4.0, 5.0, 10.0),
+      (8.0, 6.0, 10.0),
+      (5.0, 7.0, 10.0),
+      (7.0, 2.0, 10.0),
+      (3.0, 2.0, 10.0),
+      (2.0, 8.0, 10.0),
+      (8.0, 8.0, 10.0),
+      (5.0, 2.5, 10.0),
+      (3.0, 7.0, 10.0),
     ];
 
-    final spotsWithColors = data.asMap().entries.map((e) {
-      final index = e.key;
-      final (double x, double y, double size) = e.value;
-      final color = _availableColors[index % _availableColors.length];
+    final spotsWithColors = data.map((e) {
+      final (double x, double y, double size) = e;
       return ScatterSpotWithColor(
         spot: ScatterSpot(
           x,
           y,
           dotPainter: FlDotCirclePainter(
-            color: color,
+            color: circleColor,
             radius: size,
           ),
         ),
-        color: color,
+        color: circleColor,
         xLabel: '${x}m',
       );
     }).toList();
@@ -62,55 +48,66 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
         Expanded(
           child: Stack(
             children: [
-              ScatterChart(
-                ScatterChartData(
-                  scatterSpots: spotsWithColors.map((e) => e.spot).toList(),
-                  minX: 0,
-                  maxX: 10,
-                  minY: 0,
-                  maxY: 10,
-                  borderData: FlBorderData(
-                    show: false,
-                  ),
-                  gridData: FlGridData(
-                    show: true,
-                    drawHorizontalLine: true,
-                    checkToShowHorizontalLine: (value) => true,
-                    getDrawingHorizontalLine: (value) => FlLine(
-                      color: Colors.grey[300]!,
+              Padding(
+                padding: const EdgeInsets.only(top: 25.0, right: 40.0, bottom: 45.0, left: 16.0),
+                child: ScatterChart(
+                  ScatterChartData(
+                    scatterSpots: spotsWithColors.map((e) => e.spot).toList(),
+                    minX: 0,
+                    maxX: 10,
+                    minY: 0,
+                    maxY: 10,
+                    borderData: FlBorderData(
+                      show: true,
+                      border: const Border(
+                        left: BorderSide(color: Colors.black, width: 2),
+                        bottom: BorderSide(color: Colors.black, width: 2),
+                      ),
                     ),
-                    drawVerticalLine: true,
-                    checkToShowVerticalLine: (value) => true,
-                    getDrawingVerticalLine: (value) => FlLine(
-                      color: Colors.grey[300]!,
+                    gridData: FlGridData(
+                      show: true,
+                      drawHorizontalLine: true,
+                      checkToShowHorizontalLine: (value) => value % 1 == 0,
+                      getDrawingHorizontalLine: (value) => FlLine(
+                        color: Colors.grey[300]!,
+                      ),
+                      drawVerticalLine: true,
+                      checkToShowVerticalLine: (value) => false,
                     ),
-                  ),
-                   titlesData: const FlTitlesData(
-                    show: false,
-                    // leftTitles: AxisTitles(
-                    //   sideTitles: SideTitles(
-                    //     showTitles: true,
-                    //     reservedSize: 22,
-                    //   ),
-                    // ),
-                    // bottomTitles: AxisTitles(
-                    //   sideTitles: SideTitles(
-                    //     showTitles: true,
-                    //     reservedSize: 22,
-                    //   ),
-                    // ),
-                    // topTitles: AxisTitles(
-                    //   sideTitles: SideTitles(
-                    //     showTitles: false,
-                    //     reservedSize: 22,
-                    //   ),
-                    // ),
-                    // rightTitles: AxisTitles(
-                    //   sideTitles: SideTitles(
-                    //     showTitles: false,
-                    //     reservedSize: 22,
-                    //   )
-                    // )
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 40,
+                          interval: 1,
+                          getTitlesWidget: (value, meta) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 5),
+                              child: Text(
+                                "${(100 - value * 10).toStringAsFixed(0)} m",
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      bottomTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                    ),
+                    scatterTouchData: ScatterTouchData(
+                      enabled: false,
+                      handleBuiltInTouches: false,
+                    ),
                   ),
                 ),
               ),
@@ -171,8 +168,9 @@ class XLabelPainter extends CustomPainter {
 }
 
 void main() => runApp(MaterialApp(
+  debugShowCheckedModeBanner: false,
   home: Scaffold(
-    appBar: AppBar(title: const Text('Scatter Chart Sample')),
+    appBar: AppBar(title: const Text('Fish Finder')),
     body: const ScatterChartSample2(),
   ),
 ));
