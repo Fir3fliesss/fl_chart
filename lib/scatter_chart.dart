@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -9,10 +10,25 @@ class ScatterChartSample2 extends StatefulWidget {
 }
 
 class _ScatterChartSample2State extends State<ScatterChartSample2> {
-  final Color circleColor = const Color(0xFF123456); // Warna lingkaran titik pada chart
+  final Color circleColor = const Color(0xFF123456);
+  List<ScatterSpotWithColor> spotsWithColors = [];
+  Timer? _timer;
+  int _seconds = 0;
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+    _initializeData();
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _initializeData() {
     // Data titik-titik untuk scatter chart {x, y, size}
     final data = [
       (4.0, 4.0, 10.0),
@@ -28,8 +44,7 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
       (3.0, 7.0, 10.0),
     ];
 
-    // Membuat list dari ScatterSpotWithColor dari data
-    final spotsWithColors = data.map((e) {
+    spotsWithColors = data.map((e) {
       final (double x, double y, double size) = e;
       return ScatterSpotWithColor(
         spot: ScatterSpot(
@@ -44,15 +59,44 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
         xLabel: '${x}m',
       );
     }).toList();
+  }
 
-    // Membuat UI dengan column dan stack
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      setState(() {
+        _seconds += 10;
+      });
+    });
+  }
+
+  List<String> _generateTimeLabels(int seconds) {
+    List<String> labels = [];
+    int start = seconds ~/ 10 * 10;
+    for (int i = start - 50; i <= start; i += 10) {
+      if (i <= 0) {
+        labels.add('...');
+      } else if (i < 60) {
+        labels.add('${i}s');
+      } else {
+        int minutes = i ~/ 60;
+        int seconds = i % 60;
+        labels.add('${minutes}m${seconds.toString().padLeft(2, '0')}s');
+      }
+    }
+    return labels;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    List<String> _timeLabels = _generateTimeLabels(_seconds);
+
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color.fromARGB(255, 25, 182, 255),
         title: const Text('Pembacaan Fishfinder'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            // Tambahkan navigasi ke halaman sebelumnya
             Navigator.pop(context);
           },
         ),
@@ -62,7 +106,6 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
           Expanded(
             child: Stack(
               children: [
-                // Padding untuk scatter chart
                 Padding(
                   padding: const EdgeInsets.only(top: 25.0, right: 40.0, bottom: 45.0, left: 16.0),
                   child: ScatterChart(
@@ -72,7 +115,6 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                       maxX: 10,
                       minY: 0,
                       maxY: 10,
-                      // Data untuk border
                       borderData: FlBorderData(
                         show: true,
                         border: const Border(
@@ -80,7 +122,6 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                           bottom: BorderSide(color: Colors.black, width: 3),
                         ),
                       ),
-                      // Data untuk grid
                       gridData: FlGridData(
                         show: true,
                         drawHorizontalLine: true,
@@ -91,7 +132,6 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                         drawVerticalLine: true,
                         checkToShowVerticalLine: (value) => false,
                       ),
-                      // Data untuk titles
                       titlesData: FlTitlesData(
                         leftTitles: AxisTitles(
                           sideTitles: SideTitles(
@@ -116,25 +156,9 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                           sideTitles: SideTitles(
                             showTitles: true,
                             reservedSize: 30,
-                            interval: 1,
+                            interval: 2,
                             getTitlesWidget: (value, meta) {
-                              switch (value.toInt()) {
-                                case 0:
-                                  return const Padding(
-                                    padding: EdgeInsets.only(left: 10.0),
-                                    child: Text('...'),
-                                  );
-                                case 2:
-                                  return const Text('1m20');
-                                case 4:
-                                  return const Text('1m30');
-                                case 6:
-                                  return const Text('1m40');
-                                case 8:
-                                  return const Text('1m50');
-                                default:
-                                  return const Text('');
-                              }
+                              return Text(_timeLabels[(value ~/ 2) % _timeLabels.length]);
                             },
                           ),
                         ),
@@ -145,7 +169,6 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                           sideTitles: SideTitles(showTitles: false),
                         ),
                       ),
-                      // Data untuk interaksi touch pada scatter chart
                       scatterTouchData: ScatterTouchData(
                         enabled: false,
                         handleBuiltInTouches: false,
@@ -153,7 +176,6 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                     ),
                   ),
                 ),
-                // Custom painter untuk label X
                 CustomPaint(
                   painter: XLabelPainter(spotsWithColors),
                 ),
@@ -166,11 +188,10 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
   }
 }
 
-// Class untuk menyimpan data titik dengan warna dan label X
 class ScatterSpotWithColor {
   final ScatterSpot spot;
   final Color color;
-  final String xLabel;
+  String xLabel;
 
   ScatterSpotWithColor({
     required this.spot,
@@ -179,7 +200,6 @@ class ScatterSpotWithColor {
   });
 }
 
-// Custom painter untuk menampilkan label X pada titik-titik di chart
 class XLabelPainter extends CustomPainter {
   final List<ScatterSpotWithColor> spotsWithColors;
 
@@ -213,8 +233,7 @@ class XLabelPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-// Main function untuk menjalankan aplikasi Flutter
 void main() => runApp(const MaterialApp(
   debugShowCheckedModeBanner: false,
-  home: ScatterChartSample2(), // Menampilkan widget utama
+  home: ScatterChartSample2(),
 ));

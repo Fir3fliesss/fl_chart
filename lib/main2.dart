@@ -1,12 +1,14 @@
-import 'dart:async'; // Import untuk Future dan Timer
+// Import package yang dibutuhkan {async: Timer, math: Random, fl_chart: Chart}
+import 'dart:async';
 import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+// Fungsi utama untuk menampilkan Widget utama
 void main() {
   runApp(const MaterialApp(
     debugShowCheckedModeBanner: false,
-    home: ScatterChartSample2(), // Menampilkan widget utama
+    home: ScatterChartSample2(),
   ));
 }
 
@@ -19,38 +21,87 @@ class ScatterChartSample2 extends StatefulWidget {
 }
 
 class _ScatterChartSample2State extends State<ScatterChartSample2> {
-  final Color circleColor = const Color(0xFF123456); // Warna lingkaran titik pada chart
-  List<(double, double, double)> data = []; // List untuk menyimpan data titik
+  final Color circleColor = const Color(0xFF123456); // Warna lingkaran pada chart
+  List<(double, double, double)> data = []; // List untuk menyimpan data titik (Posisi dan Ukuran)
+  // Inisialisasi timer untuk display timer pada bagian bawah
+  Timer? _timer;
+  int _seconds = 0;
 
   @override
   void initState() {
     super.initState();
     // Panggil fungsi untuk mengambil data setiap detik
     startFetchingData();
+    _startTimer();
+  }
+
+  // Menghentikan timer ketika widget di tutup
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   // Fungsi untuk mengambil data posisi x, y dari modul atau API
   void fetchData() {
-    // Simulasi data dinamis, bisa diganti dengan logika pengambilan data dari API
+    // Random data untuk mencoba dinamisasi pada data posisi x dan y
     var random = Random();
-    double x = random.nextDouble() * 10; // Nilai x antara 0 dan 10
-    double y = random.nextDouble() * 10; // Nilai y antara 0 dan 10
-    double size = 10.0; // Ukuran tetap untuk contoh ini
+    double x = random.nextDouble() * 10; // Menhasilkan nilai x lalu di-kali dengan 10
+    double y = random.nextDouble() * 10; // Menhasilkan nilai y lalu di-kali dengan 10
+    double size = 10.0; // Menetapkan ukuran sebagai 10
 
-    // Perbarui state dengan data baru
+    // Memperbarui/set State dengan data baru
     setState(() {
-      data.add((x, y, size)); // Tambahkan data baru ke dalam list
+      data.add((x, y, size)); // Menambahkan data baru ke dalam list
     });
   }
 
-  // Fungsi untuk memulai fetching data setiap detik
+  // Fungsi fetching data setiap {periode} detik
   void startFetchingData() {
-    const period = Duration(seconds: 1); // Periode polling data (contoh: setiap 1 detik)
+    const period = Duration(seconds: 5); // Menentukan periode fetch data yang akan di ganti pada list menjadi 5 detik
     Timer.periodic(period, (Timer t) {
       fetchData(); // Panggil fungsi fetchData setiap periode
     });
   }
 
+  // Fungsi memulai perhitungan atau menampilkan timer
+  // Menentukan periode hitungan/tampil timer setiap 10 detik
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      setState(() {
+        _seconds += 10;
+      });
+    });
+  }
+
+  // Fungsi ini digunakan untuk menghasilkan label waktu berdasarkan nilai detik.
+  // Misalnya, jika seconds = 30, maka fungsi ini akan menghasilkan label waktu:
+  // ['20s', '30s']
+  List<String> _generateTimeLabels(int seconds) {
+    List<String> labels = [];
+    
+    // Mencari nilai awal yang merupakan kelipatan 10 terdekat dari seconds
+    int start = seconds ~/ 10 * 10;
+
+    // Menghasilkan label waktu dari start - 50 hingga start dengan interval 10
+    for (int i = start - 50; i <= start; i += 10) {
+      if (i <= 0) {
+        labels.add('...'); // Jika i <= 0, tambahkan label '...'
+      } else if (i < 60) {
+        labels.add('${i}s'); // Jika i < 60, tambahkan label dengan format '${i}s'
+      } else {
+        int minutes = i ~/ 60; // Menghitung menit dari i dibagi 60
+        int seconds = i % 60; // Menghitung detik dari i mod 60
+        labels.add('${minutes}m${seconds.toString().padLeft(2, '0')}s'); // Format menit dan detik dengan 'm' dan 's'
+      }
+    }
+    return labels.reversed.toList(); // Menampilkan label waktu yang dibalik urutannya
+  }
+
+  // Di dalam fungsi build ini, kita membuat daftar titik-titik pada chart (scatter chart)
+// dari data yang kita miliki. Setiap data memiliki nilai x, y, dan ukuran (size).
+// Kita menggunakan fungsi map untuk mengubah setiap elemen data menjadi objek ScatterSpotWithColor,
+// yang berisi informasi titik (x, y) dan label x-nya dengan format dua angka di belakang koma.
   @override
   Widget build(BuildContext context) {
     List<ScatterSpotWithColor> spotsWithColors = data.map((e) {
@@ -69,13 +120,19 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
       );
     }).toList();
 
+    // Variabel yang menyimpan daftar label waktu dalam bentuk string
+    List<String> _timeLabels = _generateTimeLabels(_seconds);
+
     return Scaffold(
+      // AppBar
       appBar: AppBar(
-        title: const Text('Tes dinamis'),
+        backgroundColor: const Color.fromARGB(255, 35, 178, 255),
+        title: const Text('Fish Finder'),
+        // Button dengan icon arrow back yang menavigasi ke halaman sebelumnya
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            // Tambahkan navigasi ke halaman sebelumnya
+            // Navigasi ke halaman sebelumnya
             Navigator.pop(context);
           },
         ),
@@ -139,34 +196,9 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                           sideTitles: SideTitles(
                             showTitles: true,
                             reservedSize: 30,
-                            interval: 1,
+                            interval: 2,
                             getTitlesWidget: (value, meta) {
-                              switch (value.toInt()) {
-                                case 0:
-                                  return const Text('...');
-                                case 2:
-                                  return const Padding(
-                                    padding: EdgeInsets.only(right: 10), // Tambahkan padding di sini
-                                    child: Text('1m20'),
-                                  );
-                                case 4:
-                                  return const Padding(
-                                    padding: EdgeInsets.only(right: 10), // Tambahkan padding di sini
-                                    child: Text('1m30'),
-                                  );
-                                case 6:
-                                  return const Padding(
-                                    padding: EdgeInsets.only(right: 10), // Tambahkan padding di sini
-                                    child: Text('1m40'),
-                                  );
-                                case 8:
-                                  return const Padding(
-                                    padding: EdgeInsets.only(right: 10), // Tambahkan padding di sini
-                                    child: Text('1m50'),
-                                  );
-                                default:
-                                  return const Text('');
-                              }
+                              return Text(_timeLabels[(value ~/ 2) % _timeLabels.length]);
                             },
                           ),
                         ),
@@ -184,10 +216,6 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                       ),
                     ),
                   ),
-                ),
-                // Custom painter untuk label X
-                CustomPaint(
-                  painter: XLabelPainter(spotsWithColors),
                 ),
               ],
             ),
@@ -209,38 +237,4 @@ class ScatterSpotWithColor {
     required this.color,
     required this.xLabel,
   });
-}
-
-// Custom painter untuk menampilkan label X pada titik-titik di chart
-class XLabelPainter extends CustomPainter {
-  final List<ScatterSpotWithColor> spotsWithColors;
-
-  XLabelPainter(this.spotsWithColors);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (final spotWithColor in spotsWithColors) {
-      final textSpan = TextSpan(
-        text: spotWithColor.xLabel,
-        style: const TextStyle(
-          color: Colors.black,
-          fontSize: 12,
-        ),
-      );
-      final textPainter = TextPainter(
-        text: textSpan,
-        textAlign: TextAlign.center,
-        textDirection: TextDirection.ltr,
-      );
-      textPainter.layout();
-      final offset = Offset(
-        spotWithColor.spot.x * size.width / 10 - textPainter.width / 2,
-        (10 - spotWithColor.spot.y) * size.height / 10 - textPainter.height - 5,
-      );
-      textPainter.paint(canvas, offset);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
