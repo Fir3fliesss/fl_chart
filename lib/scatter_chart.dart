@@ -1,88 +1,51 @@
-import 'dart:async';
-import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: ScatterChartSample2(), // Menampilkan widget utama
-  ));
-}
 
 class ScatterChartSample2 extends StatefulWidget {
   const ScatterChartSample2({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _ScatterChartSample2State createState() => _ScatterChartSample2State();
+  State<StatefulWidget> createState() => _ScatterChartSample2State();
 }
 
 class _ScatterChartSample2State extends State<ScatterChartSample2> {
   final Color circleColor = const Color(0xFF123456); // Warna lingkaran titik pada chart
-  List<DataPoint> data = []; // List untuk menyimpan data titik
-  final int maxDataPoints = 10; // Jumlah maksimal data titik
-  late DateTime startTime; // Waktu mulai
-
-  @override
-  void initState() {
-    super.initState();
-    startTime = DateTime.now(); // Catat waktu saat ini saat halaman dibuka
-    // Panggil fungsi untuk mengambil data setiap detik
-    startFetchingData();
-  }
-
-  // Fungsi untuk mengambil data posisi x, y dari modul atau API
-  void fetchData() {
-    var random = Random();
-    double x = random.nextDouble() * 10; // Nilai x antara 0 dan 10
-    double y = random.nextDouble() * 10; // Nilai y antara 0 dan 10
-    double size = 10.0; // Ukuran tetap untuk contoh ini
-
-    // Memastikan jumlah data tidak melebihi batas maksimal
-    if (data.length >= maxDataPoints) {
-      data.removeAt(0); // Hapus data paling tua jika sudah mencapai batas
-    }
-
-    // Perbarui state dengan data baru
-    setState(() {
-      data.add(DataPoint(x, y, size)); // Tambahkan data baru ke dalam list
-    });
-  }
-
-  // Fungsi untuk memulai fetching data setiap detik
-  void startFetchingData() {
-    const period = Duration(seconds: 10); // Periode polling data (setiap 10 detik)
-    Timer.periodic(period, (Timer t) {
-      fetchData(); // Panggil fungsi fetchData setiap periode
-    });
-  }
-
-  // Fungsi untuk menghitung waktu dinamis
-  String calculateTimeLabel(double value) {
-    // Hitung waktu berdasarkan waktu mulai ditambah value * 10 detik
-    DateTime currentTime = startTime.add(Duration(seconds: value.toInt() * 10));
-    String formattedTime = '${currentTime.hour}:${currentTime.minute}:${currentTime.second}';
-    return formattedTime;
-  }
 
   @override
   Widget build(BuildContext context) {
-    List<ScatterSpotWithColor> spotsWithColors = data.map((dataPoint) {
+    // Data titik-titik untuk scatter chart {x, y, size}
+    final data = [
+      (4.0, 4.0, 10.0),
+      (2.0, 5.0, 10.0),
+      (4.0, 5.0, 10.0),
+      (8.0, 6.0, 10.0),
+      (5.0, 7.0, 10.0),
+      (7.0, 2.0, 10.0),
+      (3.0, 2.0, 10.0),
+      (2.0, 8.0, 10.0),
+      (8.0, 8.0, 10.0),
+      (5.0, 2.5, 10.0),
+      (3.0, 7.0, 10.0),
+    ];
+
+    // Membuat list dari ScatterSpotWithColor dari data
+    final spotsWithColors = data.map((e) {
+      final (double x, double y, double size) = e;
       return ScatterSpotWithColor(
         spot: ScatterSpot(
-          dataPoint.x,
-          dataPoint.y,
+          x,
+          y,
           dotPainter: FlDotCirclePainter(
             color: circleColor,
-            radius: dataPoint.size,
+            radius: size,
           ),
         ),
         color: circleColor,
-        xLabel: '${dataPoint.x.toStringAsFixed(2)}, ${dataPoint.y.toStringAsFixed(2)}',
+        xLabel: '${x}m',
       );
     }).toList();
 
+    // Membuat UI dengan column dan stack
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pembacaan Fishfinder'),
@@ -155,16 +118,23 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                             reservedSize: 30,
                             interval: 1,
                             getTitlesWidget: (value, meta) {
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 10), // Tambahkan padding di sini
-                                child: Text(
-                                  calculateTimeLabel(value),
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              );
+                              switch (value.toInt()) {
+                                case 0:
+                                  return const Padding(
+                                    padding: EdgeInsets.only(left: 10.0),
+                                    child: Text('...'),
+                                  );
+                                case 2:
+                                  return const Text('1m20');
+                                case 4:
+                                  return const Text('1m30');
+                                case 6:
+                                  return const Text('1m40');
+                                case 8:
+                                  return const Text('1m50');
+                                default:
+                                  return const Text('');
+                              }
                             },
                           ),
                         ),
@@ -209,15 +179,6 @@ class ScatterSpotWithColor {
   });
 }
 
-// Class untuk menyimpan data titik (x, y, size)
-class DataPoint {
-  final double x;
-  final double y;
-  final double size;
-
-  DataPoint(this.x, this.y, this.size);
-}
-
 // Custom painter untuk menampilkan label X pada titik-titik di chart
 class XLabelPainter extends CustomPainter {
   final List<ScatterSpotWithColor> spotsWithColors;
@@ -251,3 +212,9 @@ class XLabelPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
+
+// Main function untuk menjalankan aplikasi Flutter
+void main() => runApp(const MaterialApp(
+  debugShowCheckedModeBanner: false,
+  home: ScatterChartSample2(), // Menampilkan widget utama
+));

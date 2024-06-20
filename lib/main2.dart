@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:async'; // Import untuk Future dan Timer
 import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -20,72 +20,58 @@ class ScatterChartSample2 extends StatefulWidget {
 
 class _ScatterChartSample2State extends State<ScatterChartSample2> {
   final Color circleColor = const Color(0xFF123456); // Warna lingkaran titik pada chart
-  List<DataPoint> data = []; // List untuk menyimpan data titik
-  final int maxDataPoints = 10; // Jumlah maksimal data titik
-  late DateTime startTime; // Waktu mulai
+  List<(double, double, double)> data = []; // List untuk menyimpan data titik
 
   @override
   void initState() {
     super.initState();
-    startTime = DateTime.now(); // Catat waktu saat ini saat halaman dibuka
     // Panggil fungsi untuk mengambil data setiap detik
     startFetchingData();
   }
 
   // Fungsi untuk mengambil data posisi x, y dari modul atau API
   void fetchData() {
+    // Simulasi data dinamis, bisa diganti dengan logika pengambilan data dari API
     var random = Random();
     double x = random.nextDouble() * 10; // Nilai x antara 0 dan 10
     double y = random.nextDouble() * 10; // Nilai y antara 0 dan 10
     double size = 10.0; // Ukuran tetap untuk contoh ini
 
-    // Memastikan jumlah data tidak melebihi batas maksimal
-    if (data.length >= maxDataPoints) {
-      data.removeAt(0); // Hapus data paling tua jika sudah mencapai batas
-    }
-
     // Perbarui state dengan data baru
     setState(() {
-      data.add(DataPoint(x, y, size)); // Tambahkan data baru ke dalam list
+      data.add((x, y, size)); // Tambahkan data baru ke dalam list
     });
   }
 
   // Fungsi untuk memulai fetching data setiap detik
   void startFetchingData() {
-    const period = Duration(seconds: 10); // Periode polling data (setiap 10 detik)
+    const period = Duration(seconds: 1); // Periode polling data (contoh: setiap 1 detik)
     Timer.periodic(period, (Timer t) {
       fetchData(); // Panggil fungsi fetchData setiap periode
     });
   }
 
-  // Fungsi untuk menghitung waktu dinamis
-  String calculateTimeLabel(double value) {
-    // Hitung waktu berdasarkan waktu mulai ditambah value * 10 detik
-    DateTime currentTime = startTime.add(Duration(seconds: value.toInt() * 10));
-    String formattedTime = '${currentTime.hour}:${currentTime.minute}:${currentTime.second}';
-    return formattedTime;
-  }
-
   @override
   Widget build(BuildContext context) {
-    List<ScatterSpotWithColor> spotsWithColors = data.map((dataPoint) {
+    List<ScatterSpotWithColor> spotsWithColors = data.map((e) {
+      final (double x, double y, double size) = e;
       return ScatterSpotWithColor(
         spot: ScatterSpot(
-          dataPoint.x,
-          dataPoint.y,
+          x,
+          y,
           dotPainter: FlDotCirclePainter(
             color: circleColor,
-            radius: dataPoint.size,
+            radius: size,
           ),
         ),
         color: circleColor,
-        xLabel: '${dataPoint.x.toStringAsFixed(2)}, ${dataPoint.y.toStringAsFixed(2)}',
+        xLabel: '${x.toStringAsFixed(2)}, ${y.toStringAsFixed(2)}',
       );
     }).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pembacaan Fishfinder'),
+        title: const Text('Tes dinamis'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -155,16 +141,32 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                             reservedSize: 30,
                             interval: 1,
                             getTitlesWidget: (value, meta) {
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 10), // Tambahkan padding di sini
-                                child: Text(
-                                  calculateTimeLabel(value),
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              );
+                              switch (value.toInt()) {
+                                case 0:
+                                  return const Text('...');
+                                case 2:
+                                  return const Padding(
+                                    padding: EdgeInsets.only(right: 10), // Tambahkan padding di sini
+                                    child: Text('1m20'),
+                                  );
+                                case 4:
+                                  return const Padding(
+                                    padding: EdgeInsets.only(right: 10), // Tambahkan padding di sini
+                                    child: Text('1m30'),
+                                  );
+                                case 6:
+                                  return const Padding(
+                                    padding: EdgeInsets.only(right: 10), // Tambahkan padding di sini
+                                    child: Text('1m40'),
+                                  );
+                                case 8:
+                                  return const Padding(
+                                    padding: EdgeInsets.only(right: 10), // Tambahkan padding di sini
+                                    child: Text('1m50'),
+                                  );
+                                default:
+                                  return const Text('');
+                              }
                             },
                           ),
                         ),
@@ -207,15 +209,6 @@ class ScatterSpotWithColor {
     required this.color,
     required this.xLabel,
   });
-}
-
-// Class untuk menyimpan data titik (x, y, size)
-class DataPoint {
-  final double x;
-  final double y;
-  final double size;
-
-  DataPoint(this.x, this.y, this.size);
 }
 
 // Custom painter untuk menampilkan label X pada titik-titik di chart
