@@ -1,6 +1,8 @@
+// Import library Flutter dan charting
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+// Widget utama untuk menampilkan scatter chart
 class ScatterChartSample2 extends StatefulWidget {
   const ScatterChartSample2({super.key});
 
@@ -8,11 +10,13 @@ class ScatterChartSample2 extends StatefulWidget {
   State<StatefulWidget> createState() => _ScatterChartSample2State();
 }
 
+// State dari widget ScatterChartSample2
 class _ScatterChartSample2State extends State<ScatterChartSample2> {
-  final Color circleColor = const Color(0xFF123456); // Ganti dengan warna kustom yang Anda inginkan
+  final Color circleColor = const Color(0xFF123456); // Warna lingkaran titik pada chart
 
   @override
   Widget build(BuildContext context) {
+    // Data titik-titik untuk scatter chart {x, y, size}
     final data = [
       (4.0, 4.0, 10.0),
       (2.0, 5.0, 10.0),
@@ -27,6 +31,7 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
       (3.0, 7.0, 10.0),
     ];
 
+    // Membuat list dari ScatterSpotWithColor dari data
     final spotsWithColors = data.map((e) {
       final (double x, double y, double size) = e;
       return ScatterSpotWithColor(
@@ -43,11 +48,13 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
       );
     }).toList();
 
+    // Membuat UI dengan column dan stack
     return Column(
       children: [
         Expanded(
           child: Stack(
             children: [
+              // Padding untuk scatter chart
               Padding(
                 padding: const EdgeInsets.only(top: 25.0, right: 40.0, bottom: 45.0, left: 16.0),
                 child: ScatterChart(
@@ -57,13 +64,15 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                     maxX: 10,
                     minY: 0,
                     maxY: 10,
+                    // Data untuk border
                     borderData: FlBorderData(
                       show: true,
                       border: const Border(
-                        left: BorderSide(color: Colors.black, width: 2),
-                        bottom: BorderSide(color: Colors.black, width: 2),
+                        left: BorderSide(color: Colors.black, width: 3),
+                        bottom: BorderSide(color: Colors.black, width: 3),
                       ),
                     ),
+                    // Data untuk grid
                     gridData: FlGridData(
                       show: true,
                       drawHorizontalLine: true,
@@ -74,6 +83,7 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                       drawVerticalLine: true,
                       checkToShowVerticalLine: (value) => false,
                     ),
+                    // Data untuk titles
                     titlesData: FlTitlesData(
                       leftTitles: AxisTitles(
                         sideTitles: SideTitles(
@@ -104,6 +114,7 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                         sideTitles: SideTitles(showTitles: false),
                       ),
                     ),
+                    // Data untuk interaksi touch pada scatter chart
                     scatterTouchData: ScatterTouchData(
                       enabled: false,
                       handleBuiltInTouches: false,
@@ -111,6 +122,7 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                   ),
                 ),
               ),
+              // Custom painter untuk label X
               CustomPaint(
                 painter: XLabelPainter(spotsWithColors),
               ),
@@ -122,6 +134,7 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
   }
 }
 
+// Class untuk menyimpan data titik dengan warna dan label X
 class ScatterSpotWithColor {
   final ScatterSpot spot;
   final Color color;
@@ -134,6 +147,7 @@ class ScatterSpotWithColor {
   });
 }
 
+// Custom painter untuk menampilkan label X pada titik-titik di chart
 class XLabelPainter extends CustomPainter {
   final List<ScatterSpotWithColor> spotsWithColors;
 
@@ -167,10 +181,11 @@ class XLabelPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
+// Main function untuk menjalankan aplikasi Flutter
 void main() => runApp(MaterialApp(
   debugShowCheckedModeBanner: false,
   home: Scaffold(
-    appBar: AppBar(title: const Text('Fish Finder')),
-    body: const ScatterChartSample2(),
+    appBar: AppBar(title: const Text('Fish Finder')), // Judul aplikasi
+    body: const ScatterChartSample2(), // Menampilkan widget utama
   ),
 ));
