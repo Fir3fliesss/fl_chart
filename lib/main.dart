@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'main2.dart';
+import 'main1.dart';
 
 void main() => runApp(const MyApp());
 
@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
       title: 'Fish Finder',
       home: const MainPage(),
       routes: {
-        '/main2': (context) => const ScatterChartSample2(),
+        '/main1': (context) => const ScatterChartSample2(),
       },
     );
   }
@@ -32,7 +32,7 @@ class MainPage extends StatelessWidget {
         child: ElevatedButton(
           child: const Text("Mulai mencari ikan"),
           onPressed: () {
-            Navigator.pushNamed(context, '/main2');
+            Navigator.pushNamed(context, '/main1');
           },
         ),
       ),
