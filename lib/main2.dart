@@ -73,7 +73,7 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
   Timer? _timer;
   int _seconds = 0;
   double confidenceValue = 0.0;
-  double averageDepth = 0.0; // Variable untuk menyimpan nilai kedalaman rata-rata
+  double averageDepth = 0.0;
 
   @override
   void initState() {
@@ -89,30 +89,35 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
     super.dispose();
   }
 
-  void fetchData() {
-    var random = Random();
-    setState(() {
-      for (Fish fish in fishData) {
-        fish.x += fish.vx;
-        fish.y += fish.vy;
-      }
+void fetchData() {
+  var random = Random();
+  setState(() {
+    for (Fish fish in fishData) {
+      fish.x += fish.vx;
+      fish.y += fish.vy;
+    }
 
-      fishData.removeWhere(
-          (fish) => fish.x < 0 || fish.x > 10 || fish.y < 0 || fish.y > 10);
+    fishData.removeWhere(
+        (fish) => fish.x < 0 || fish.x > 10 || fish.y < 0 || fish.y > 10);
 
-      if (random.nextDouble() < 0.1) {
-        double x = random.nextBool() ? 0 : 10;
-        double y = random.nextDouble() * 10;
-        double vx = (random.nextDouble() * 0.2) - 0.1;
-        double vy = (random.nextDouble() * 0.2) - 0.1;
-        double depth = random.nextDouble() * 20; // Kedalaman acak antara 0 hingga 20 meter
-        fishData.add(Fish(x: x, y: y, vx: vx, vy: vy, depth: depth));
-      }
+    if (random.nextDouble() < 0.1) {
+      double x = random.nextBool() ? 0 : 10;
+      double y = random.nextDouble() * 10;
+      double vx = (random.nextDouble() * 0.2) - 0.1;
+      double vy = (random.nextDouble() * 0.2) - 0.1;
+      double depth = random.nextDouble() * 20; // Kedalaman acak antara 0 hingga 20 meter
+      fishData.add(Fish(x: x, y: y, vx: vx, vy: vy, depth: depth));
+    }
 
+    if (fishData.isEmpty) {
+      confidenceValue = 0.0; // Set confidenceValue ke 0 jika tidak ada ikan
+    } else {
       confidenceValue = random.nextDouble() * 100;
-      averageDepth = _calculateAverageDepth(); // Perbarui nilai kedalaman rata-rata
-    });
-  }
+    }
+
+    averageDepth = _calculateAverageDepth();
+  });
+}
 
   void startFetchingData() {
     const period = Duration(seconds: 1);
@@ -294,24 +299,26 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                           height: 60,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Image.asset('assets/images/fish.png',
-                                      width: 24,
-                                      height: 24),
+                                  Image.asset(
+                                    'assets/images/fish.png',
+                                    width: 24,
+                                    height: 24,
+                                  ),
                                   const SizedBox(width: 8),
-                                  Text('${averageDepth.toStringAsFixed(2)} m',
-                                      style: const TextStyle(fontSize: 16)),
+                                  Text(
+                                    '${averageDepth.toStringAsFixed(2)} m',
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
                                 ],
                               ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                      'Confident: ${confidenceValue.toStringAsFixed(2)}%',
-                                      style: const TextStyle(fontSize: 16)),
-                                ],
+                              Text(
+                                'Confident: ${confidenceValue.toStringAsFixed(2)}%',
+                                style: const TextStyle(fontSize: 16),
                               ),
                             ],
                           ),
