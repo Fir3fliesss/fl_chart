@@ -88,7 +88,7 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
 
   @override
   Widget build(BuildContext context) {
-    List<String> _timeLabels = _generateTimeLabels(_seconds);
+    List<String> timeLabels = _generateTimeLabels(_seconds);
 
     return Scaffold(
       appBar: AppBar(
@@ -107,7 +107,8 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
             child: Stack(
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 25.0, right: 40.0, bottom: 45.0, left: 16.0),
+                  padding: const EdgeInsets.only(
+                      top: 25.0, right: 40.0, bottom: 45.0, left: 16.0),
                   child: ScatterChart(
                     ScatterChartData(
                       scatterSpots: spotsWithColors.map((e) => e.spot).toList(),
@@ -158,7 +159,8 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
                             reservedSize: 30,
                             interval: 2,
                             getTitlesWidget: (value, meta) {
-                              return Text(_timeLabels[(value ~/ 2) % _timeLabels.length]);
+                              return Text(
+                                  timeLabels[(value ~/ 2) % timeLabels.length]);
                             },
                           ),
                         ),
@@ -234,6 +236,6 @@ class XLabelPainter extends CustomPainter {
 }
 
 void main() => runApp(const MaterialApp(
-  debugShowCheckedModeBanner: false,
-  home: ScatterChartSample2(),
-));
+      debugShowCheckedModeBanner: false,
+      home: ScatterChartSample2(),
+    ));

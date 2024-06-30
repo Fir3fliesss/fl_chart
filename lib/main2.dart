@@ -1,10 +1,10 @@
-// Import package yang dibutuhkan {async: Timer, math: Random, fl_chart: Chart}
 import 'dart:async';
 import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
+import 'package:flutter/services.dart';
 
-// Fungsi utama untuk menampilkan Widget utama
 void main() {
   runApp(const MaterialApp(
     debugShowCheckedModeBanner: false,
@@ -16,56 +16,111 @@ class ScatterChartSample2 extends StatefulWidget {
   const ScatterChartSample2({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _ScatterChartSample2State createState() => _ScatterChartSample2State();
 }
 
+class FlDotCustomPainter extends FlDotPainter {
+  final ui.Image image;
+
+  FlDotCustomPainter(this.image);
+
+  @override
+  void draw(Canvas canvas, FlSpot spot, Offset offsetInCanvas,
+      {double? opacity = 1,
+      Color? color,
+      double? strokeWidth = 0,
+      double? radius = 15}) {
+    final paint = Paint()
+      ..color = color?.withOpacity(opacity ?? 1) ?? Colors.black;
+    final imageSize = Size(image.width.toDouble(), image.height.toDouble());
+    final destinationRect = Rect.fromCenter(
+        center: offsetInCanvas, width: radius! * 2, height: radius * 2);
+    final sourceRect = Rect.fromLTWH(0, 0, imageSize.width, imageSize.height);
+    canvas.drawImageRect(image, sourceRect, destinationRect, paint);
+  }
+
+  @override
+  Size getSize(FlSpot spot) => const Size(40, 40);
+
+  void drawTouched(Canvas canvas, FlSpot spot, Offset offsetInCanvas,
+      {Color? color, double? strokeWidth = 0, double? radius = 40}) {
+    draw(canvas, spot, offsetInCanvas,
+        opacity: 1, color: color, strokeWidth: strokeWidth, radius: radius);
+  }
+
+  @override
+  FlDotPainter lerp(FlDotPainter a, FlDotPainter b, double t) {
+    return this;
+  }
+
+  @override
+  Color get mainColor => Colors.transparent;
+
+  @override
+  List<Object?> get props => [image];
+}
+
 class _ScatterChartSample2State extends State<ScatterChartSample2> {
-  final Color circleColor = const Color(0xFF123456); // Warna lingkaran pada chart
-  List<(double, double, double)> data = []; // List untuk menyimpan data titik (Posisi dan Ukuran)
-  // Inisialisasi timer untuk display timer pada bagian bawah
+  Future<ui.Image> loadImage(String asset) async {
+    ByteData data = await rootBundle.load(asset);
+    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+    ui.FrameInfo fi = await codec.getNextFrame();
+    return fi.image;
+  }
+
+  final Color circleColor = const Color(0xFF123456);
+  List<Fish> fishData = [];
   Timer? _timer;
   int _seconds = 0;
+  double confidenceValue = 0.0;
+  double averageDepth = 0.0; // Variable untuk menyimpan nilai kedalaman rata-rata
 
   @override
   void initState() {
     super.initState();
-    // Panggil fungsi untuk mengambil data setiap detik
     startFetchingData();
     _startTimer();
+    imageFuture = loadImage('assets/images/fish.png');
   }
 
-  // Menghentikan timer ketika widget di tutup
   @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
   }
 
-  // Fungsi untuk mengambil data posisi x, y dari modul atau API
   void fetchData() {
-    // Random data untuk mencoba dinamisasi pada data posisi x dan y
     var random = Random();
-    double x = random.nextDouble() * 10; // Menhasilkan nilai x lalu di-kali dengan 10
-    double y = random.nextDouble() * 10; // Menhasilkan nilai y lalu di-kali dengan 10
-    double size = 10.0; // Menetapkan ukuran sebagai 10
-
-    // Memperbarui/set State dengan data baru
     setState(() {
-      data.add((x, y, size)); // Menambahkan data baru ke dalam list
+      for (Fish fish in fishData) {
+        fish.x += fish.vx;
+        fish.y += fish.vy;
+      }
+
+      fishData.removeWhere(
+          (fish) => fish.x < 0 || fish.x > 10 || fish.y < 0 || fish.y > 10);
+
+      if (random.nextDouble() < 0.1) {
+        double x = random.nextBool() ? 0 : 10;
+        double y = random.nextDouble() * 10;
+        double vx = (random.nextDouble() * 0.2) - 0.1;
+        double vy = (random.nextDouble() * 0.2) - 0.1;
+        double depth = random.nextDouble() * 20; // Kedalaman acak antara 0 hingga 20 meter
+        fishData.add(Fish(x: x, y: y, vx: vx, vy: vy, depth: depth));
+      }
+
+      confidenceValue = random.nextDouble() * 100;
+      averageDepth = _calculateAverageDepth(); // Perbarui nilai kedalaman rata-rata
     });
   }
 
-  // Fungsi fetching data setiap {periode} detik
   void startFetchingData() {
-    const period = Duration(seconds: 5); // Menentukan periode fetch data yang akan di ganti pada list menjadi 5 detik
+    const period = Duration(seconds: 1);
     Timer.periodic(period, (Timer t) {
-      fetchData(); // Panggil fungsi fetchData setiap periode
+      fetchData();
     });
   }
 
-  // Fungsi memulai perhitungan atau menampilkan timer
-  // Menentukan periode hitungan/tampil timer setiap 10 detik
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
       setState(() {
@@ -74,159 +129,220 @@ class _ScatterChartSample2State extends State<ScatterChartSample2> {
     });
   }
 
-  // Fungsi ini digunakan untuk menghasilkan label waktu berdasarkan nilai detik.
-  // Misalnya, jika seconds = 30, maka fungsi ini akan menghasilkan label waktu:
-  // ['20s', '30s']
   List<String> _generateTimeLabels(int seconds) {
     List<String> labels = [];
-    
-    // Mencari nilai awal yang merupakan kelipatan 10 terdekat dari seconds
     int start = seconds ~/ 10 * 10;
 
-    // Menghasilkan label waktu dari start - 50 hingga start dengan interval 10
     for (int i = start - 50; i <= start; i += 10) {
       if (i <= 0) {
-        labels.add('...'); // Jika i <= 0, tambahkan label '...'
+        labels.add('...');
       } else if (i < 60) {
-        labels.add('${i}s'); // Jika i < 60, tambahkan label dengan format '${i}s'
+        labels.add('${i}s');
       } else {
-        int minutes = i ~/ 60; // Menghitung menit dari i dibagi 60
-        int seconds = i % 60; // Menghitung detik dari i mod 60
-        labels.add('${minutes}m${seconds.toString().padLeft(2, '0')}s'); // Format menit dan detik dengan 'm' dan 's'
+        int minutes = i ~/ 60;
+        int seconds = i % 60;
+        labels.add('${minutes}m${seconds.toString().padLeft(2, '0')}s');
       }
     }
-    return labels.reversed.toList(); // Menampilkan label waktu yang dibalik urutannya
+    return labels.reversed.toList();
   }
 
-  // Di dalam fungsi build ini, kita membuat daftar titik-titik pada chart (scatter chart)
-// dari data yang kita miliki. Setiap data memiliki nilai x, y, dan ukuran (size).
-// Kita menggunakan fungsi map untuk mengubah setiap elemen data menjadi objek ScatterSpotWithColor,
-// yang berisi informasi titik (x, y) dan label x-nya dengan format dua angka di belakang koma.
+  late Future<ui.Image> imageFuture;
+
+  double _calculateAverageDepth() {
+    if (fishData.isEmpty) return 0.0;
+
+    double radius = 2.0;
+    double totalDepth = 0.0;
+    int count = 0;
+
+    for (Fish fish in fishData) {
+      for (Fish otherFish in fishData) {
+        double distance =
+            sqrt(pow(fish.x - otherFish.x, 2) + pow(fish.y - otherFish.y, 2));
+
+        if (distance <= radius) {
+          totalDepth += otherFish.depth;
+          count++;
+        }
+      }
+    }
+
+    double averageDepth = count > 0 ? totalDepth / count : 0.0;
+    return averageDepth;
+  }
+
   @override
   Widget build(BuildContext context) {
-    List<ScatterSpotWithColor> spotsWithColors = data.map((e) {
-      final (double x, double y, double size) = e;
-      return ScatterSpotWithColor(
-        spot: ScatterSpot(
-          x,
-          y,
-          dotPainter: FlDotCirclePainter(
-            color: circleColor,
-            radius: size,
-          ),
-        ),
-        color: circleColor,
-        xLabel: '${x.toStringAsFixed(2)}, ${y.toStringAsFixed(2)}',
-      );
-    }).toList();
+    return FutureBuilder<ui.Image>(
+      future: imageFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData) {
+          List<ScatterSpotWithColor> spotsWithColors = fishData.map((fish) {
+            return ScatterSpotWithColor(
+              spot: ScatterSpot(
+                fish.x,
+                fish.y,
+                dotPainter: FlDotCustomPainter(snapshot.data!),
+              ),
+              color: circleColor,
+              xLabel:
+                  '${fish.x.toStringAsFixed(2)}, ${fish.y.toStringAsFixed(2)}',
+            );
+          }).toList();
 
-    // Variabel yang menyimpan daftar label waktu dalam bentuk string
-    List<String> _timeLabels = _generateTimeLabels(_seconds);
+          List<String> timeLabels = _generateTimeLabels(_seconds);
 
-    return Scaffold(
-      // AppBar
-      appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 35, 178, 255),
-        title: const Text('Fish Finder'),
-        // Button dengan icon arrow back yang menavigasi ke halaman sebelumnya
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            // Navigasi ke halaman sebelumnya
-            Navigator.pop(context);
-          },
-        ),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Stack(
+          return Scaffold(
+            appBar: AppBar(
+              backgroundColor: const Color.fromARGB(255, 35, 178, 255),
+              title: const Text('Fish Finder'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+            body: Column(
               children: [
-                // Padding untuk scatter chart
-                Padding(
-                  padding: const EdgeInsets.only(top: 25.0, right: 40.0, bottom: 45.0, left: 16.0),
-                  child: ScatterChart(
-                    ScatterChartData(
-                      scatterSpots: spotsWithColors.map((e) => e.spot).toList(),
-                      minX: 0,
-                      maxX: 10,
-                      minY: 0,
-                      maxY: 10,
-                      // Data untuk border
-                      borderData: FlBorderData(
-                        show: true,
-                        border: const Border(
-                          left: BorderSide(color: Colors.black, width: 3),
-                          bottom: BorderSide(color: Colors.black, width: 3),
-                        ),
-                      ),
-                      // Data untuk grid
-                      gridData: FlGridData(
-                        show: true,
-                        drawHorizontalLine: true,
-                        checkToShowHorizontalLine: (value) => value % 1 == 0,
-                        getDrawingHorizontalLine: (value) => FlLine(
-                          color: Colors.grey[300]!,
-                        ),
-                        drawVerticalLine: true,
-                        checkToShowVerticalLine: (value) => false,
-                      ),
-                      // Data untuk titles
-                      titlesData: FlTitlesData(
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 40,
-                            interval: 1,
-                            getTitlesWidget: (value, meta) {
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 5),
-                                child: Text(
-                                  "${(100 - value * 10).toStringAsFixed(0)} m",
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 12,
-                                  ),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            top: 25.0, right: 40.0, bottom: 50.0, left: 16.0),
+                        child: ScatterChart(
+                          ScatterChartData(
+                            scatterSpots:
+                                spotsWithColors.map((e) => e.spot).toList(),
+                            minX: 0,
+                            maxX: 10,
+                            minY: 0,
+                            maxY: 10,
+                            borderData: FlBorderData(
+                              show: true,
+                              border: const Border(
+                                left: BorderSide(color: Colors.black, width: 3),
+                                bottom:
+                                    BorderSide(color: Colors.black, width: 3),
+                              ),
+                            ),
+                            gridData: FlGridData(
+                              show: true,
+                              drawHorizontalLine: true,
+                              checkToShowHorizontalLine: (value) =>
+                                  value % 1 == 0,
+                              getDrawingHorizontalLine: (value) => FlLine(
+                                color: Colors.grey[300]!,
+                              ),
+                              drawVerticalLine: true,
+                              checkToShowVerticalLine: (value) => false,
+                            ),
+                            titlesData: FlTitlesData(
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 40,
+                                  interval: 1,
+                                  getTitlesWidget: (value, meta) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(right: 5),
+                                      child: Text(
+                                        "${(100 - value * 10).toStringAsFixed(0)} m",
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
-                              );
-                            },
+                              ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 30,
+                                  interval: 2,
+                                  getTitlesWidget: (value, meta) {
+                                    return Text(timeLabels[
+                                        (value ~/ 2) % timeLabels.length]);
+                                  },
+                                ),
+                              ),
+                              topTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              rightTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                            ),
+                            scatterTouchData: ScatterTouchData(
+                              enabled: false,
+                              handleBuiltInTouches: false,
+                            ),
                           ),
                         ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 30,
-                            interval: 2,
-                            getTitlesWidget: (value, meta) {
-                              return Text(_timeLabels[(value ~/ 2) % _timeLabels.length]);
-                            },
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          color: Colors.white,
+                          height: 60,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Row(
+                                children: [
+                                  Image.asset('assets/images/fish.png',
+                                      width: 24,
+                                      height: 24),
+                                  const SizedBox(width: 8),
+                                  Text('${averageDepth.toStringAsFixed(2)} m',
+                                      style: const TextStyle(fontSize: 16)),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                      'Confident: ${confidenceValue.toStringAsFixed(2)}%',
+                                      style: const TextStyle(fontSize: 16)),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
                       ),
-                      // Data untuk interaksi touch pada scatter chart
-                      scatterTouchData: ScatterTouchData(
-                        enabled: false,
-                        handleBuiltInTouches: false,
-                      ),
-                    ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
+          );
+        } else {
+          return const Center(child: CircularProgressIndicator());
+        }
+      },
     );
   }
 }
 
-// Class untuk menyimpan data titik dengan warna dan label X
+class Fish {
+  double x, y, vx, vy, depth;
+
+  Fish({
+    required this.x,
+    required this.y,
+    required this.vx,
+    required this.vy,
+    this.depth = 0,
+  });
+}
+
 class ScatterSpotWithColor {
   final ScatterSpot spot;
   final Color color;
