@@ -3,4 +3,11 @@
 A new Flutter project with fl_chart lib
 
 ----------
-*Main adalah homePage, kemudian halaman yang dipakai adalah main2.dar*
+Clone repo
+run `flutter pub get`
+If getting some error, try `dart fix --dry-run` and `dart fix --apply`
+To code formating, use `dart format $PATH`
+
+Run using `flutter run`
+
+
