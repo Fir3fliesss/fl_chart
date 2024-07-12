@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'scatter_chart.dart';
+import 'main1.dart';
 
 void main() => runApp(const MyApp());
 
@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
       title: 'Fish Finder',
       home: const MainPage(),
       routes: {
-        '/scatter_chart': (context) => const FishFinderApp(),
+        '/main1': (context) => const FishFinderApp(),
       },
     );
   }
@@ -32,7 +32,7 @@ class MainPage extends StatelessWidget {
         child: ElevatedButton(
           child: const Text("Mulai mencari ikan"),
           onPressed: () {
-            Navigator.pushNamed(context, '/scatter_chart');
+            Navigator.pushNamed(context, '/main1');
           },
         ),
       ),
