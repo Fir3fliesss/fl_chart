@@ -6,13 +6,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
-// void main() {
-//   runApp(const MaterialApp(
-//     debugShowCheckedModeBanner: false,
-//     home: FishFinderApp(),
-//   ));
-// }
-
 class FishFinderApp extends StatefulWidget {
   const FishFinderApp({super.key});
 
@@ -27,10 +20,15 @@ class FlDotCustomPainter extends FlDotPainter {
 
   @override
   void draw(Canvas canvas, FlSpot spot, Offset offsetInCanvas,
-      {double? opacity = 1, Color? color, double? strokeWidth = 0, double? radius = 15}) {
-    final paint = Paint()..color = color?.withOpacity(opacity ?? 1) ?? Colors.black;
+      {double? opacity = 1,
+      Color? color,
+      double? strokeWidth = 0,
+      double? radius = 15}) {
+    final paint = Paint()
+      ..color = color?.withOpacity(opacity ?? 1) ?? Colors.black;
     final imageSize = Size(image.width.toDouble(), image.height.toDouble());
-    final destinationRect = Rect.fromCenter(center: offsetInCanvas, width: radius! * 2, height: radius * 2);
+    final destinationRect = Rect.fromCenter(
+        center: offsetInCanvas, width: radius! * 2, height: radius * 2);
     final sourceRect = Rect.fromLTWH(0, 0, imageSize.width, imageSize.height);
     canvas.drawImageRect(image, sourceRect, destinationRect, paint);
   }
@@ -51,8 +49,6 @@ class FlDotCustomPainter extends FlDotPainter {
 }
 
 class _FishFinderAppState extends State<FishFinderApp> {
-  
-
   Future<ui.Image> loadImage(String asset) async {
     ByteData data = await rootBundle.load(asset);
     ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
@@ -60,8 +56,8 @@ class _FishFinderAppState extends State<FishFinderApp> {
     return fi.image;
   }
 
-  final Color circleColor = const Color(0xFF123456); // Warna lingkaran pada chart
-  List<Fish> fishData = []; // List untuk menyimpan data ikan
+  final Color circleColor = const Color(0xFF123456);
+  List<Fish> fishData = [];
   Timer? _timer;
   double _xOffset = 0.0;
   Random random = Random();
@@ -72,7 +68,7 @@ class _FishFinderAppState extends State<FishFinderApp> {
     startFetchingData();
     _startTimer();
     imageFuture = loadImage('assets/images/fish.png');
-     _controller = VideoPlayerController.asset('assets/images/lautlagi.mp4')
+    _controller = VideoPlayerController.asset('assets/images/lautlagi.mp4')
       ..initialize().then((_) {
         setState(() {});
         _controller.setLooping(true);
@@ -90,14 +86,11 @@ class _FishFinderAppState extends State<FishFinderApp> {
     setState(() {
       double y = random.nextDouble() * 10;
       fishData.add(Fish(x: _xOffset, y: y));
-      if (fishData.length > 10) {
-        fishData.removeAt(0);
-      }
     });
   }
 
   void startFetchingData() {
-    const period = Duration(seconds: 10); // Update setiap 10 detik
+    const period = Duration(seconds: 3);
     Timer.periodic(period, (Timer t) {
       fetchData();
     });
@@ -119,7 +112,8 @@ class _FishFinderAppState extends State<FishFinderApp> {
     return FutureBuilder<ui.Image>(
       future: imageFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData) {
           List<ScatterSpotWithColor> spotsWithColors = [];
           for (var fish in fishData) {
             spotsWithColors.add(ScatterSpotWithColor(
@@ -129,7 +123,8 @@ class _FishFinderAppState extends State<FishFinderApp> {
                 dotPainter: FlDotCustomPainter(snapshot.data!),
               ),
               color: circleColor,
-              xLabel: '${fish.x.toStringAsFixed(2)}, ${fish.y.toStringAsFixed(2)}',
+              xLabel:
+                  '${fish.x.toStringAsFixed(2)}, ${fish.y.toStringAsFixed(2)}',
             ));
           }
 
@@ -139,75 +134,77 @@ class _FishFinderAppState extends State<FishFinderApp> {
               title: const Text('Fish Finder'),
             ),
             bottomNavigationBar: BottomAppBar(
-        color: Colors.blue,
-        height: 60,
-        shadowColor: Colors.black38,
-         child: Center(
-          child: Text('Confident: ${random.nextInt(101)}%', style: const TextStyle(
-                      color: Colors.black,),
-         ),
-         ),),
+              color: Colors.blue,
+              height: 60,
+              shadowColor: Colors.black38,
+              child: Center(
+                child: Text(
+                  'Confident: ${random.nextInt(101)}%',
+                  style: const TextStyle(
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
             body: Column(
               children: [
                 Expanded(
                   child: Stack(
-                    
                     children: [
                       Positioned.fill(
-                      child: _controller.value.isInitialized
-                      ? VideoPlayer(_controller)
-                      : Container(color: Colors.black),
-                    ),
-
-                    Positioned(
-              top: 20,
-              right: 255,
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    
-                    child: Column(
-                      children: [
-                        
-                        const Text(
-                          "Data Terkini",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black
-                          ),
-                        ),
-                        Row(
+                        child: _controller.value.isInitialized
+                            ? VideoPlayer(_controller)
+                            : Container(color: Colors.black),
+                      ),
+                      Positioned(
+                        top: 20,
+                        right: 255,
+                        child: Column(
                           children: [
-                            Image.asset('assets/images/fish.png', width: 30),
-                            const Text(":9 M", style: TextStyle(
-                            color: Colors.blue
-                        ),),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              child: Column(
+                                children: [
+                                  const Text(
+                                    "Data Terkini",
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black),
+                                  ),
+                                  Row(
+                                    children: [
+                                      Image.asset('assets/images/fish.png',
+                                          width: 30),
+                                      const Text(
+                                        ":9 M",
+                                        style: TextStyle(color: Colors.black),
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      Image.asset('assets/images/seawapes.png',
+                                          width: 30),
+                                      const Text(
+                                        ":36 M",
+                                        style: TextStyle(color: Colors.black),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
-                          Row(
-                            children: [
-                              Image.asset('assets/images/fish.png', width: 30),
-                              const Text(":36 M", style: TextStyle(
-                              color: Colors.blue
-                          ),),
-                            ],
-                          ),
-                        
-                        
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
+                      ),
                       Padding(
-                        padding: const EdgeInsets.only(top: 125, right: 40.0, bottom:10, left: 16.0),
+                        padding: const EdgeInsets.only(
+                            top: 125, right: 40.0, bottom: 10, left: 16.0),
                         child: ScatterChart(
                           ScatterChartData(
-                            scatterSpots: spotsWithColors.map((e) => e.spot).toList(),
+                            scatterSpots:
+                                spotsWithColors.map((e) => e.spot).toList(),
                             minX: _xOffset - 10,
                             maxX: _xOffset,
                             minY: 0,
@@ -216,13 +213,15 @@ class _FishFinderAppState extends State<FishFinderApp> {
                               show: true,
                               border: const Border(
                                 left: BorderSide(color: Colors.white, width: 2),
-                                bottom: BorderSide(color: Colors.white, width: 2),
+                                bottom:
+                                    BorderSide(color: Colors.white, width: 2),
                               ),
                             ),
                             gridData: FlGridData(
                               show: true,
                               drawHorizontalLine: true,
-                              checkToShowHorizontalLine: (value) => value % 1 == 0,
+                              checkToShowHorizontalLine: (value) =>
+                                  value % 1 == 0,
                               getDrawingHorizontalLine: (value) => FlLine(
                                 color: Colors.grey[300]!,
                               ),
@@ -237,7 +236,7 @@ class _FishFinderAppState extends State<FishFinderApp> {
                                   interval: 1,
                                   getTitlesWidget: (value, meta) {
                                     return Padding(
-                                      padding: const EdgeInsets.only(right: 5),
+                                      padding: const EdgeInsets.only(right: 0),
                                       child: Text(
                                         "${(100 - value * 10).toStringAsFixed(0)} m",
                                         style: const TextStyle(
@@ -256,7 +255,11 @@ class _FishFinderAppState extends State<FishFinderApp> {
                                   interval: 10,
                                   getTitlesWidget: (value, meta) {
                                     if (value % 10 == 0) {
-                                      return Text('${value.toStringAsFixed(0)}s', style: const TextStyle(color: Colors.white),);
+                                      return Text(
+                                        '${value.toStringAsFixed(0)}s',
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      );
                                     }
                                     return const Text('');
                                   },

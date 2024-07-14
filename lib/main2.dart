@@ -5,12 +5,6 @@ import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 
-void main() {
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: ScatterChartSample2(),
-  ));
-}
 
 class ScatterChartSample2 extends StatefulWidget {
   const ScatterChartSample2({super.key});

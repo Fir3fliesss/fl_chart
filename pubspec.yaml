@@ -63,7 +63,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
+    - assets/images/
     - assets/images/fish.png
+    - assets/images/lautlagi.mp4
+    - assets/images/seawapes.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
