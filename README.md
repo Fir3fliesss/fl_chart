@@ -6,8 +6,7 @@ Fl chart is the library of flutter apps to make a chart that i use to demo test 
 
 Use the dart package manager [flutter pub](https://pub.dev/) to install all the depedencies.
 
-⁠ ```bash
-
+⁠ ```
 flutter pub get
  ⁠flutter pub outdated
 ```
