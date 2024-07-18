@@ -12,7 +12,7 @@ flutter pub outdated
 ```
 
 ## Usage
-⁠ ```dart
+```
 # run the flutter app on your device
 flutter run
 ```
