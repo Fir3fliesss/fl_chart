@@ -5,6 +5,11 @@ import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
+import 'package:bluetooth_classic/models/device.dart';
+import 'package:bluetooth_classic/bluetooth_classic.dart';
+
+// local imports
+import 'bluetooth_classic.dart' as bl_classic;
 
 class FishFinderApp extends StatefulWidget {
   const FishFinderApp({super.key});
@@ -49,6 +54,17 @@ class FlDotCustomPainter extends FlDotPainter {
 }
 
 class _FishFinderAppState extends State<FishFinderApp> {
+  String _platformVersion = 'Unknown';
+  final _bluetoothClassicPlugin = BluetoothClassic();
+  List<Device> _devices = [];
+  List<Device> _discoveredDevices = [];
+  bool _scanning = false;
+  int _deviceStatus = Device.disconnected;
+  Uint8List _data = Uint8List(0);
+  double fishDepth = 0;
+  double oceanDepth = 0;
+  double confLv = 0;
+
   Future<ui.Image> loadImage(String asset) async {
     ByteData data = await rootBundle.load(asset);
     ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
@@ -74,6 +90,32 @@ class _FishFinderAppState extends State<FishFinderApp> {
         _controller.setLooping(true);
         _controller.play();
       });
+
+    _initiPlatformData();
+    _bluetoothClassicPlugin.onDeviceStatusChanged().listen((event) {
+      setState(() {
+        _deviceStatus = event;
+      });
+    });
+    _bluetoothClassicPlugin.onDeviceDataReceived().listen((event) {
+      // _data = Uint8List.fromList([0, ...event]); // if you want to append data from BL to _data
+      // but in this case, we want to only store the latest message from bluetooth
+      Uint8List _blMsg = Uint8List.fromList([0, ...event]);
+      String msg = String.fromCharCodes(_blMsg);
+      print("data: ${_blMsg}");
+      List<String> _blMessages = msg.split(" ");
+      double _fishDepth = double.parse(parseNumericString(_blMessages[0]));
+      double _oceanDepth = double.parse(parseNumericString(_blMessages[1]));
+      double _conf = double.parse(parseNumericString(_blMessages[2]));
+      print("fishdepth: $_fishDepth - oceadepth: $_oceanDepth - conf: $_conf");
+      setState(() {
+        _data = _blMsg;
+        fishDepth = _fishDepth;
+        oceanDepth = _oceanDepth;
+        confLv = _conf;
+        // fishData.add(Fish(x: _xOffset, y: _fishDepth));
+      });
+    });
   }
 
   @override
@@ -82,10 +124,29 @@ class _FishFinderAppState extends State<FishFinderApp> {
     super.dispose();
   }
 
+  bool isNumeric(String s) {
+    if (s == null) {
+      return false;
+    }
+    return double.tryParse(s) != null;
+  }
+
+  String parseNumericString(String s) {
+    String newS = "";
+    s.runes.forEach((int rune) {
+      var character = new String.fromCharCode(rune);
+      if (isNumeric(character)) {
+        newS += character;
+      }
+    });
+    return newS;
+  }
+
   void fetchData() {
     setState(() {
-      double y = random.nextDouble() * 10;
-      fishData.add(Fish(x: _xOffset, y: y));
+      // double y = random.nextDouble() * 10;
+      // fishData.add(Fish(x: _xOffset, y: y));
+      fishData.add(Fish(x: _xOffset, y: fishDepth));
     });
   }
 
@@ -102,6 +163,42 @@ class _FishFinderAppState extends State<FishFinderApp> {
         _xOffset += 1;
       });
     });
+  }
+
+  Future<void> _initiPlatformData() async {
+    String _pltVer =
+        await bl_classic.initPlatformState(_bluetoothClassicPlugin);
+    setState(() {
+      _platformVersion = _pltVer;
+    });
+  }
+
+  Future<void> _getDevices() async {
+    var res = await _bluetoothClassicPlugin.getPairedDevices();
+    setState(() {
+      _devices = res;
+    });
+  }
+
+  Future<void> _scan() async {
+    if (_scanning) {
+      await _bluetoothClassicPlugin.stopScan();
+      setState(() {
+        _scanning = false;
+      });
+    } else {
+      await _bluetoothClassicPlugin.startScan();
+      _bluetoothClassicPlugin.onDeviceDiscovered().listen(
+        (event) {
+          setState(() {
+            _discoveredDevices = [..._discoveredDevices, event];
+          });
+        },
+      );
+      setState(() {
+        _scanning = true;
+      });
+    }
   }
 
   late Future<ui.Image> imageFuture;
@@ -139,151 +236,223 @@ class _FishFinderAppState extends State<FishFinderApp> {
               shadowColor: Colors.black38,
               child: Center(
                 child: Text(
-                  'Confident: ${random.nextInt(101)}%',
+                  'Confidence: ${confLv}%',
                   style: const TextStyle(
                     color: Colors.black,
                   ),
                 ),
               ),
             ),
-            body: Column(
-              children: [
-                Expanded(
-                  child: Stack(
+            body: _deviceStatus == Device.disconnected
+                ? SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Text("Device status is $_deviceStatus"),
+                        TextButton(
+                          onPressed: () async {
+                            await _bluetoothClassicPlugin.initPermissions();
+                          },
+                          child: const Text("Check Permissions"),
+                        ),
+                        TextButton(
+                          onPressed: _getDevices,
+                          child: const Text("Get Paired Devices"),
+                        ),
+                        TextButton(
+                          onPressed: _deviceStatus == Device.connected
+                              ? () async {
+                                  await _bluetoothClassicPlugin.disconnect();
+                                }
+                              : null,
+                          child: const Text("disconnect"),
+                        ),
+                        TextButton(
+                          onPressed: _deviceStatus == Device.connected
+                              ? () async {
+                                  await _bluetoothClassicPlugin.write("ping");
+                                }
+                              : null,
+                          child: const Text("send ping"),
+                        ),
+                        Center(
+                          child: Text('Running on: $_platformVersion\n'),
+                        ),
+                        ...[
+                          for (var device in _devices)
+                            TextButton(
+                                onPressed: () async {
+                                  await _bluetoothClassicPlugin.connect(
+                                      device.address,
+                                      "00001101-0000-1000-8000-00805f9b34fb");
+                                  setState(() {
+                                    _discoveredDevices = [];
+                                    _devices = [];
+                                  });
+                                },
+                                child: Text(device.name ?? device.address))
+                        ],
+                        TextButton(
+                          onPressed: _scan,
+                          child: Text(_scanning ? "Stop Scan" : "Start Scan"),
+                        ),
+                        ...[
+                          for (var device in _discoveredDevices)
+                            Text(device.name ?? device.address)
+                        ],
+                        Text("Received data: ${String.fromCharCodes(_data)}")
+                      ],
+                    ),
+                  )
+                : Column(
                     children: [
-                      Positioned.fill(
-                        child: _controller.value.isInitialized
-                            ? VideoPlayer(_controller)
-                            : Container(color: Colors.black),
-                      ),
-                      Positioned(
-                        top: 20,
-                        right: 255,
-                        child: Column(
+                      Expanded(
+                        child: Stack(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
+                            Positioned.fill(
+                              child: _controller.value.isInitialized
+                                  ? VideoPlayer(_controller)
+                                  : Container(color: Colors.black),
+                            ),
+                            Positioned(
+                              top: 20,
+                              right: 255,
                               child: Column(
                                 children: [
-                                  const Text(
-                                    "Data Terkini",
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black),
-                                  ),
-                                  Row(
-                                    children: [
-                                      Image.asset('assets/images/fish.png',
-                                          width: 30),
-                                      const Text(
-                                        ":9 M",
-                                        style: TextStyle(color: Colors.black),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    children: [
-                                      Image.asset('assets/images/seawapes.png',
-                                          width: 30),
-                                      const Text(
-                                        ":36 M",
-                                        style: TextStyle(color: Colors.black),
-                                      ),
-                                    ],
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    child: Column(
+                                      children: [
+                                        const Text(
+                                          "Data Terkini",
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black),
+                                        ),
+                                        Text(
+                                            "Received data: ${String.fromCharCodes(_data)}"),
+                                        Row(
+                                          children: [
+                                            Image.asset(
+                                                'assets/images/fish.png',
+                                                width: 30),
+                                            const Text(
+                                              ":9 M",
+                                              style: TextStyle(
+                                                  color: Colors.black),
+                                            ),
+                                          ],
+                                        ),
+                                        Row(
+                                          children: [
+                                            Image.asset(
+                                                'assets/images/seawapes.png',
+                                                width: 30),
+                                            const Text(
+                                              ":36 M",
+                                              style: TextStyle(
+                                                  color: Colors.black),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  top: 125,
+                                  right: 40.0,
+                                  bottom: 10,
+                                  left: 16.0),
+                              child: ScatterChart(
+                                ScatterChartData(
+                                  scatterSpots: spotsWithColors
+                                      .map((e) => e.spot)
+                                      .toList(),
+                                  minX: _xOffset - 10,
+                                  maxX: _xOffset,
+                                  minY: 0,
+                                  maxY: 5000,
+                                  borderData: FlBorderData(
+                                    show: true,
+                                    border: const Border(
+                                      left: BorderSide(
+                                          color: Colors.white, width: 2),
+                                      bottom: BorderSide(
+                                          color: Colors.white, width: 2),
+                                    ),
+                                  ),
+                                  gridData: FlGridData(
+                                    show: true,
+                                    drawHorizontalLine: true,
+                                    checkToShowHorizontalLine: (value) =>
+                                        value % 1 == 0,
+                                    getDrawingHorizontalLine: (value) => FlLine(
+                                      color: Colors.grey[300]!,
+                                    ),
+                                    drawVerticalLine: true,
+                                    checkToShowVerticalLine: (value) => false,
+                                  ),
+                                  titlesData: FlTitlesData(
+                                    leftTitles: AxisTitles(
+                                      sideTitles: SideTitles(
+                                        showTitles: true,
+                                        reservedSize: 40,
+                                        interval: 1,
+                                        getTitlesWidget: (value, meta) {
+                                          return Padding(
+                                            padding:
+                                                const EdgeInsets.only(right: 0),
+                                            child: Text(
+                                              "${(5000 - value * 10).toStringAsFixed(0)} m",
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    bottomTitles: AxisTitles(
+                                      sideTitles: SideTitles(
+                                        showTitles: true,
+                                        reservedSize: 30,
+                                        interval: 10,
+                                        getTitlesWidget: (value, meta) {
+                                          if (value % 10 == 0) {
+                                            return Text(
+                                              '${value.toStringAsFixed(0)}s',
+                                              style: const TextStyle(
+                                                  color: Colors.white),
+                                            );
+                                          }
+                                          return const Text('');
+                                        },
+                                      ),
+                                    ),
+                                    topTitles: const AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false),
+                                    ),
+                                    rightTitles: const AxisTitles(
+                                      sideTitles: SideTitles(showTitles: false),
+                                    ),
+                                  ),
+                                  scatterTouchData: ScatterTouchData(
+                                    enabled: false,
+                                    handleBuiltInTouches: false,
+                                  ),
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            top: 125, right: 40.0, bottom: 10, left: 16.0),
-                        child: ScatterChart(
-                          ScatterChartData(
-                            scatterSpots:
-                                spotsWithColors.map((e) => e.spot).toList(),
-                            minX: _xOffset - 10,
-                            maxX: _xOffset,
-                            minY: 0,
-                            maxY: 10,
-                            borderData: FlBorderData(
-                              show: true,
-                              border: const Border(
-                                left: BorderSide(color: Colors.white, width: 2),
-                                bottom:
-                                    BorderSide(color: Colors.white, width: 2),
-                              ),
-                            ),
-                            gridData: FlGridData(
-                              show: true,
-                              drawHorizontalLine: true,
-                              checkToShowHorizontalLine: (value) =>
-                                  value % 1 == 0,
-                              getDrawingHorizontalLine: (value) => FlLine(
-                                color: Colors.grey[300]!,
-                              ),
-                              drawVerticalLine: true,
-                              checkToShowVerticalLine: (value) => false,
-                            ),
-                            titlesData: FlTitlesData(
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 40,
-                                  interval: 1,
-                                  getTitlesWidget: (value, meta) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(right: 0),
-                                      child: Text(
-                                        "${(100 - value * 10).toStringAsFixed(0)} m",
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 30,
-                                  interval: 10,
-                                  getTitlesWidget: (value, meta) {
-                                    if (value % 10 == 0) {
-                                      return Text(
-                                        '${value.toStringAsFixed(0)}s',
-                                        style: const TextStyle(
-                                            color: Colors.white),
-                                      );
-                                    }
-                                    return const Text('');
-                                  },
-                                ),
-                              ),
-                              topTitles: const AxisTitles(
-                                sideTitles: SideTitles(showTitles: false),
-                              ),
-                              rightTitles: const AxisTitles(
-                                sideTitles: SideTitles(showTitles: false),
-                              ),
-                            ),
-                            scatterTouchData: ScatterTouchData(
-                              enabled: false,
-                              handleBuiltInTouches: false,
-                            ),
-                          ),
-                        ),
-                      ),
                     ],
                   ),
-                ),
-              ],
-            ),
           );
         } else {
           return const Center(child: CircularProgressIndicator());
