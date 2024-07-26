@@ -102,7 +102,7 @@ class _FishFinderAppState extends State<FishFinderApp> {
       // but in this case, we want to only store the latest message from bluetooth
       Uint8List _blMsg = Uint8List.fromList([0, ...event]);
       String msg = String.fromCharCodes(_blMsg);
-      print("data: ${_blMsg}");
+      // print("data: ${_blMsg}");
       List<String> _blMessages = msg.split(" ");
       double _fishDepth = double.parse(parseNumericString(_blMessages[0]));
       double _oceanDepth = double.parse(parseNumericString(_blMessages[1]));
@@ -151,7 +151,7 @@ class _FishFinderAppState extends State<FishFinderApp> {
   }
 
   void startFetchingData() {
-    const period = Duration(seconds: 3);
+    const period = Duration(seconds: 1);
     Timer.periodic(period, (Timer t) {
       fetchData();
     });
@@ -299,7 +299,7 @@ class _FishFinderAppState extends State<FishFinderApp> {
                           for (var device in _discoveredDevices)
                             Text(device.name ?? device.address)
                         ],
-                        Text("Received data: ${String.fromCharCodes(_data)}")
+                        // Text("Received data: ${String.fromCharCodes(_data)}")
                       ],
                     ),
                   )
@@ -329,16 +329,16 @@ class _FishFinderAppState extends State<FishFinderApp> {
                                               fontWeight: FontWeight.bold,
                                               color: Colors.black),
                                         ),
-                                        Text(
-                                            "Received data: ${String.fromCharCodes(_data)}"),
+                                        // Text(
+                                        //     "Received data: ${String.fromCharCodes(_data)}"),
                                         Row(
                                           children: [
                                             Image.asset(
                                                 'assets/images/fish.png',
                                                 width: 30),
-                                            const Text(
-                                              ":9 M",
-                                              style: TextStyle(
+                                            Text(
+                                              ":${fishDepth} meter",
+                                              style: const TextStyle(
                                                   color: Colors.black),
                                             ),
                                           ],
@@ -348,9 +348,9 @@ class _FishFinderAppState extends State<FishFinderApp> {
                                             Image.asset(
                                                 'assets/images/seawapes.png',
                                                 width: 30),
-                                            const Text(
-                                              ":36 M",
-                                              style: TextStyle(
+                                            Text(
+                                              ":${oceanDepth} meter",
+                                              style: const TextStyle(
                                                   color: Colors.black),
                                             ),
                                           ],
