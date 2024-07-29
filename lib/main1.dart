@@ -65,6 +65,8 @@ class _FishFinderAppState extends State<FishFinderApp> {
   double oceanDepth = 0;
   double confLv = 0;
 
+  double maxDepth = 5000;
+
   Future<ui.Image> loadImage(String asset) async {
     ByteData data = await rootBundle.load(asset);
     ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
@@ -73,7 +75,9 @@ class _FishFinderAppState extends State<FishFinderApp> {
   }
 
   final Color circleColor = const Color(0xFF123456);
+  final Color depthColor = Color.fromARGB(255, 66, 23, 6);
   List<Fish> fishData = [];
+  List<Depth> depthData = [];
   Timer? _timer;
   double _xOffset = 0.0;
   Random random = Random();
@@ -146,7 +150,8 @@ class _FishFinderAppState extends State<FishFinderApp> {
     setState(() {
       // double y = random.nextDouble() * 10;
       // fishData.add(Fish(x: _xOffset, y: y));
-      fishData.add(Fish(x: _xOffset, y: fishDepth));
+      fishData.add(Fish(x: _xOffset, y: maxDepth - fishDepth));
+      depthData.add(Depth(x: _xOffset, y: maxDepth - oceanDepth));
     });
   }
 
@@ -222,6 +227,19 @@ class _FishFinderAppState extends State<FishFinderApp> {
               color: circleColor,
               xLabel:
                   '${fish.x.toStringAsFixed(2)}, ${fish.y.toStringAsFixed(2)}',
+            ));
+          }
+          for (var depth in depthData) {
+            spotsWithColors.add(ScatterSpotWithColor(
+              spot: ScatterSpot(depth.x, depth.y,
+                  // dotPainter: FlDotCustomPainter(snapshot.data!),
+                  dotPainter: FlDotCirclePainter(
+                    radius: 6,
+                    color: Colors.primaries[16],
+                  )),
+              color: depthColor,
+              xLabel:
+                  '${depth.x.toStringAsFixed(2)}, ${depth.y.toStringAsFixed(2)}',
             ));
           }
 
@@ -375,7 +393,7 @@ class _FishFinderAppState extends State<FishFinderApp> {
                                   minX: _xOffset - 10,
                                   maxX: _xOffset,
                                   minY: 0,
-                                  maxY: 5000,
+                                  maxY: maxDepth,
                                   borderData: FlBorderData(
                                     show: true,
                                     border: const Border(
@@ -401,13 +419,13 @@ class _FishFinderAppState extends State<FishFinderApp> {
                                       sideTitles: SideTitles(
                                         showTitles: true,
                                         reservedSize: 40,
-                                        interval: 1,
+                                        interval: maxDepth / 10,
                                         getTitlesWidget: (value, meta) {
                                           return Padding(
                                             padding:
                                                 const EdgeInsets.only(right: 0),
                                             child: Text(
-                                              "${(5000 - value * 10).toStringAsFixed(0)} m",
+                                              "${(maxDepth - value).toStringAsFixed(0)} m",
                                               style: const TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 12,
@@ -466,6 +484,12 @@ class Fish {
   double x, y;
 
   Fish({required this.x, required this.y});
+}
+
+class Depth {
+  double x, y;
+
+  Depth({required this.x, required this.y});
 }
 
 class ScatterSpotWithColor {
