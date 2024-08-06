@@ -234,7 +234,7 @@ class _FishFinderAppState extends State<FishFinderApp> {
               spot: ScatterSpot(depth.x, depth.y,
                   // dotPainter: FlDotCustomPainter(snapshot.data!),
                   dotPainter: FlDotCirclePainter(
-                    radius: 6,
+                    radius: 10,
                     color: Colors.primaries[16],
                   )),
               color: depthColor,
