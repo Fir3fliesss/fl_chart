@@ -180,11 +180,10 @@ class _FishFinderAppState extends State<FishFinderApp> {
   }
 
   Future<void> _getDevices() async {
-    await bl_functions.enableBT().then((bt_enabled) async {
+    setState(() async {
+      var bt_enabled = await bl_functions.enableBT();
       var res = await _bluetoothClassicPlugin.getPairedDevices();
-      setState(() {
-        _devices = res;
-      });
+      _devices = res;
     });
   }
 
@@ -277,7 +276,9 @@ class _FishFinderAppState extends State<FishFinderApp> {
                         ),
                         TextButton(
                           onPressed: _getDevices,
-                          child: const Text("Get Paired Devices"),
+                          child: _devices.length == 0
+                              ? const Text("Enable Bluetooth")
+                              : const Text("Get Paired Devices"),
                         ),
                         TextButton(
                           onPressed: _deviceStatus == Device.connected
