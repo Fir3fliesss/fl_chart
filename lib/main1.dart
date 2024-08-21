@@ -9,7 +9,7 @@ import 'package:bluetooth_classic/models/device.dart';
 import 'package:bluetooth_classic/bluetooth_classic.dart';
 
 // local imports
-import 'bluetooth_classic.dart' as bl_classic;
+import 'bluetooth_functions.dart' as bl_functions;
 
 class FishFinderApp extends StatefulWidget {
   const FishFinderApp({super.key});
@@ -84,6 +84,7 @@ class _FishFinderAppState extends State<FishFinderApp> {
 
   @override
   void initState() {
+    _bluetoothClassicPlugin.initPermissions();
     super.initState();
     startFetchingData();
     _startTimer();
@@ -172,16 +173,18 @@ class _FishFinderAppState extends State<FishFinderApp> {
 
   Future<void> _initiPlatformData() async {
     String _pltVer =
-        await bl_classic.initPlatformState(_bluetoothClassicPlugin);
+        await bl_functions.initPlatformState(_bluetoothClassicPlugin);
     setState(() {
       _platformVersion = _pltVer;
     });
   }
 
   Future<void> _getDevices() async {
-    var res = await _bluetoothClassicPlugin.getPairedDevices();
-    setState(() {
-      _devices = res;
+    await bl_functions.enableBT().then((bt_enabled) async {
+      var res = await _bluetoothClassicPlugin.getPairedDevices();
+      setState(() {
+        _devices = res;
+      });
     });
   }
 

@@ -22,20 +22,25 @@ class MyApp extends StatelessWidget {
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
 
+  // @override
+  // Widget build(BuildContext context) {
+  //   return Scaffold(
+  //     appBar: AppBar(
+  //       title: const Text('Fish Finder'),
+  //     ),
+  //     body: Center(
+  //       child: ElevatedButton(
+  //         child: const Text("Mulai mencari ikan"),
+  //         onPressed: () {
+  //           Navigator.pushNamed(context, '/main1');
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Fish Finder'),
-      ),
-      body: Center(
-        child: ElevatedButton(
-          child: const Text("Mulai mencari ikan"),
-          onPressed: () {
-            Navigator.pushNamed(context, '/main1');
-          },
-        ),
-      ),
-    );
+    return const FishFinderApp();
   }
 }

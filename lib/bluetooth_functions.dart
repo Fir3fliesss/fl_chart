@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:bluetooth_classic/bluetooth_classic.dart';
+import 'package:bluetooth_enable_fork/bluetooth_enable_fork.dart' as bl_enable;
 
 // Platform messages are asynchronous, so we initialize in an async method.
 Future<String> initPlatformState(
@@ -16,4 +17,16 @@ Future<String> initPlatformState(
   }
 
   return platformVersion;
+}
+
+Future<bool> enableBT() async {
+  bl_enable.BluetoothEnable.enableBluetooth.then((value) {
+    // print(value);
+    if (value == "true") {
+      return true;
+    } else {
+      return false;
+    }
+  });
+  return false;
 }
