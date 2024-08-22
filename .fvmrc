@@ -1,1 +1,10 @@
-app/.fvmrc
+{
+  "flutter": "3.22.3",
+  "flavors": {
+    "development": "3.22.3",
+    "production": "3.22.3"
+  },
+  "runPubGetOnSdkChanges": true,
+  "updateVscodeSettings": true,
+  "updateGitIgnore": true
+}
