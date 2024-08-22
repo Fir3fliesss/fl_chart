@@ -1,0 +1,36 @@
+name: fishfinder_chart
+description: "A new Flutter module project."
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.6
+  fl_chart: ^0.68.0
+  async: ^2.11.0
+  video_player: ^2.9.1
+  bluetooth_classic: ^0.0.1
+  bluetooth_enable_fork: ^0.1.6
+  keep_screen_on: ^3.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/images/fish.png
+    - assets/images/lautlagi.mp4
+    - assets/images/seawapes.png
+  module:
+    androidX: true
+    androidPackage: riset.ai.fishfinder_chart
+    iosBundleIdentifier: riset.ai.fishfinderChart
