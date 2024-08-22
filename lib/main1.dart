@@ -7,12 +7,14 @@ import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:bluetooth_classic/models/device.dart';
 import 'package:bluetooth_classic/bluetooth_classic.dart';
+import 'package:keep_screen_on/keep_screen_on.dart';
 
 // local imports
 import 'bluetooth_functions.dart' as bl_functions;
 
 class FishFinderApp extends StatefulWidget {
-  const FishFinderApp({super.key});
+  const FishFinderApp({Key? key, required this.title}) : super(key: key);
+  final String title;
 
   @override
   _FishFinderAppState createState() => _FishFinderAppState();
@@ -66,6 +68,7 @@ class _FishFinderAppState extends State<FishFinderApp> {
   double confLv = 0;
 
   double maxDepth = 5000;
+  String _GetDevicesButtonLabel = "Refresh Paired Bluetooth Devices";
 
   Future<ui.Image> loadImage(String asset) async {
     ByteData data = await rootBundle.load(asset);
@@ -84,6 +87,8 @@ class _FishFinderAppState extends State<FishFinderApp> {
 
   @override
   void initState() {
+    _getBtState();
+    KeepScreenOn.turnOn();
     _bluetoothClassicPlugin.initPermissions();
     super.initState();
     startFetchingData();
@@ -136,6 +141,15 @@ class _FishFinderAppState extends State<FishFinderApp> {
     return double.tryParse(s) != null;
   }
 
+  void _getBtState() async {
+    bool bt_state = await bl_functions.enableBT();
+    if (bt_state == true) {
+      setState(() {
+        _GetDevicesButtonLabel = "Refresh Paired Bluetooth Devices";
+      });
+    }
+  }
+
   String parseNumericString(String s) {
     String newS = "";
     s.runes.forEach((int rune) {
@@ -180,10 +194,15 @@ class _FishFinderAppState extends State<FishFinderApp> {
   }
 
   Future<void> _getDevices() async {
-    setState(() async {
-      var bt_enabled = await bl_functions.enableBT();
-      var res = await _bluetoothClassicPlugin.getPairedDevices();
-      _devices = res;
+    setState(() {
+      _GetDevicesButtonLabel = "Refresh Paired Bluetooth Devices";
+    });
+    await bl_functions.enableBT().then((bt_enabled) {
+      _bluetoothClassicPlugin.getPairedDevices().then((res) {
+        setState(() {
+          _devices = res;
+        });
+      });
     });
   }
 
@@ -265,9 +284,9 @@ class _FishFinderAppState extends State<FishFinderApp> {
             ),
             body: _deviceStatus == Device.disconnected
                 ? SingleChildScrollView(
+                    child: Center(
                     child: Column(
                       children: [
-                        Text("Device status is $_deviceStatus"),
                         TextButton(
                           onPressed: () async {
                             await _bluetoothClassicPlugin.initPermissions();
@@ -276,29 +295,27 @@ class _FishFinderAppState extends State<FishFinderApp> {
                         ),
                         TextButton(
                           onPressed: _getDevices,
-                          child: _devices.length == 0
-                              ? const Text("Enable Bluetooth")
-                              : const Text("Get Paired Devices"),
+                          child: Text(_GetDevicesButtonLabel),
                         ),
-                        TextButton(
-                          onPressed: _deviceStatus == Device.connected
-                              ? () async {
-                                  await _bluetoothClassicPlugin.disconnect();
-                                }
-                              : null,
-                          child: const Text("disconnect"),
-                        ),
-                        TextButton(
-                          onPressed: _deviceStatus == Device.connected
-                              ? () async {
-                                  await _bluetoothClassicPlugin.write("ping");
-                                }
-                              : null,
-                          child: const Text("send ping"),
-                        ),
-                        Center(
-                          child: Text('Running on: $_platformVersion\n'),
-                        ),
+                        // TextButton(
+                        //   onPressed: _deviceStatus == Device.connected
+                        //       ? () async {
+                        //           await _bluetoothClassicPlugin.disconnect();
+                        //         }
+                        //       : null,
+                        //   child: const Text("disconnect"),
+                        // ),
+                        // TextButton(
+                        //   onPressed: _deviceStatus == Device.connected
+                        //       ? () async {
+                        //           await _bluetoothClassicPlugin.write("ping");
+                        //         }
+                        //       : null,
+                        //   child: const Text("send ping"),
+                        // ),
+                        // Center(
+                        //   child: Text('Running on: $_platformVersion\n'),
+                        // ),
                         ...[
                           for (var device in _devices)
                             TextButton(
@@ -315,7 +332,9 @@ class _FishFinderAppState extends State<FishFinderApp> {
                         ],
                         TextButton(
                           onPressed: _scan,
-                          child: Text(_scanning ? "Stop Scan" : "Start Scan"),
+                          child: Text(_scanning
+                              ? "Stop Scan"
+                              : "Scan For Bluetooth Devices"),
                         ),
                         ...[
                           for (var device in _discoveredDevices)
@@ -324,7 +343,7 @@ class _FishFinderAppState extends State<FishFinderApp> {
                         // Text("Received data: ${String.fromCharCodes(_data)}")
                       ],
                     ),
-                  )
+                  ))
                 : Column(
                     children: [
                       Expanded(
