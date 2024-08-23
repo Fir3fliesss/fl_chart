@@ -130,6 +130,7 @@ class _FishFinderAppState extends State<FishFinderApp> {
 
   @override
   void dispose() {
+    _bluetoothClassicPlugin.disconnect();
     _timer?.cancel();
     super.dispose();
   }
