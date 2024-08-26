@@ -13,16 +13,16 @@ import 'package:video_player/video_player.dart';
 // local imports
 import 'custom_painter.dart';
 
-class DeviceScreen extends StatefulWidget {
-  const DeviceScreen({super.key, required this.connection});
+class FishfinderReceiverScreen extends StatefulWidget {
+  const FishfinderReceiverScreen({super.key, required this.connection});
 
   final BluetoothConnection connection;
 
   @override
-  State<DeviceScreen> createState() => _DeviceScreenState();
+  State<FishfinderReceiverScreen> createState() => _DeviceScreenState();
 }
 
-class _DeviceScreenState extends State<DeviceScreen> {
+class _DeviceScreenState extends State<FishfinderReceiverScreen> {
   // initialize variables
   // bluetooth_classic
   StreamSubscription? _readSubscription;

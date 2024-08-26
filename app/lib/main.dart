@@ -3,29 +3,29 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_classic/flutter_blue_classic.dart';
-import 'device_screen.dart';
+import 'receiver_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const FishfinderApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class FishfinderApp extends StatelessWidget {
+  const FishfinderApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(home: MainScreen());
+    return const MaterialApp(home: FishfinderMainScreen());
   }
 }
 
-class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+class FishfinderMainScreen extends StatefulWidget {
+  const FishfinderMainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  State<FishfinderMainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<FishfinderMainScreen> {
   final _flutterBlueClassicPlugin = FlutterBlueClassic(usesFineLocation: true);
 
   BluetoothAdapterState _adapterState = BluetoothAdapterState.unknown;
@@ -121,8 +121,8 @@ class _MainScreenState extends State<MainScreen> {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) =>
-                                  DeviceScreen(connection: connection!)));
+                              builder: (context) => FishfinderReceiverScreen(
+                                  connection: connection!)));
                     }
                   } catch (e) {
                     if (mounted) setState(() => _connectingToIndex = null);
