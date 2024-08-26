@@ -86,7 +86,7 @@ class _MainScreenState extends State<FishfinderMainScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('FlutterBlueClassic example app'),
+        title: const Text('Fish Finder - BL Receiver Selection'),
       ),
       body: ListView(
         children: [
