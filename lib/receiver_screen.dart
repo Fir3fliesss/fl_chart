@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_classic/flutter_blue_classic.dart';
+import 'package:keep_screen_on/keep_screen_on.dart';
 
 // chart imports
 import 'dart:ui' as ui;
@@ -45,6 +46,9 @@ class _DeviceScreenState extends State<FishfinderReceiverScreen> {
 
   @override
   void initState() {
+    // keepscreen on
+    KeepScreenOn.turnOn();
+
     // bluetooth_classic
     _readSubscription = widget.connection.input?.listen((event) {
       if (mounted) {

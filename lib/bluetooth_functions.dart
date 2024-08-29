@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:bluetooth_classic/bluetooth_classic.dart';
 import 'package:bluetooth_enable_fork/bluetooth_enable_fork.dart' as bl_enable;
+import 'package:flutter_exit_app/flutter_exit_app.dart';
 
 // Platform messages are asynchronous, so we initialize in an async method.
 Future<String> initPlatformState(

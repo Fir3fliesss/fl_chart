@@ -14,7 +14,8 @@ dependencies:
   fl_chart: ^0.68.0
   async: ^2.11.0
   video_player: ^2.9.1
-  bluetooth_classic: ^0.0.1
+  # bluetooth_classic: ^0.0.1
+  flutter_blue_classic: ^0.0.1
   bluetooth_enable_fork: ^0.1.6
   keep_screen_on: ^3.0.0
 
